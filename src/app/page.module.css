@@ -41,7 +41,7 @@
 
 .status[data-foundation-status="connected"] {
   color: var(--color-primary);
-  background: var(--color-connected-surface);
+  background: var(--color-surface);
 }
 
 .status[data-foundation-status="foundation_unavailable"] {
