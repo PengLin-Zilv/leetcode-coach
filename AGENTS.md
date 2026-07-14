@@ -71,8 +71,8 @@ Build one persistent single-user flow before expanding the product:
 1. Setup captures deadline, weekly capacity, session length, and starting level.
 2. Today selects one suitable problem and gives a grounded reason.
 3. Practice opens the external problem and supports notes, timing, and progressive hints.
-4. Reflection records outcome, blocker, confidence, hint depth, and elapsed time.
-5. Feedback shows one useful positive, one correction, one review cue, and the MEMORY change.
+4. Reflection records result, duration, confidence, an optional note, and highest hint level.
+5. Feedback shows one useful positive, one review cue, the MEMORY change, and validated MIND feedback when available.
 6. Progress shows evidence states and due reviews.
 7. The completed attempt changes a later recommendation in a tested case.
 
@@ -85,7 +85,7 @@ Use one local development user unless the user requests accounts. Do not let aut
 | Concern | Required boundary |
 |---|---|
 | Recommendation | Deterministic, inspectable application logic returns one task, structured factors, and a matching reason. Inject the current time for testing. |
-| MEMORY | Store attempts and user corrections as source-of-truth events. Derive explainable, rebuildable states from those events. Raw chat is not training truth. |
+| MEMORY | Store Attempts as source-of-truth events. Derive explainable, rebuildable Skill State from those Attempts. Raw chat is not training truth. |
 | MIND | Receives compact typed context and returns validated typed output. It may propose feedback or a diagnosis; application code validates and writes. |
 | Catalog | Store curated metadata and external links only. Do not copy proprietary problem statements. |
 | Persistence | Setup and progress survive reloads. Use the simplest persistent store compatible with the existing stack. |
@@ -110,8 +110,8 @@ At minimum, automated tests must demonstrate:
 - A due review can affect selection.
 - Solving with help does not produce a reliable state.
 - Repeated independent evidence can produce a reliable state.
-- A reflection event persists atomically, and a successful MEMORY projection affects the next recommendation.
-- A projection failure never loses or rewrites the attempt event; MEMORY can be rebuilt from attempts and corrections.
+- An Attempt submitted through Reflection persists atomically, and a successful MEMORY projection affects the next recommendation.
+- A projection failure never loses or rewrites the Attempt event; MEMORY can be rebuilt from Attempts.
 - Presentation controls do not increase hint depth.
 - Invalid or unavailable MIND cannot write MEMORY or break the core flow.
 - Reloading preserves setup and progress.

@@ -80,18 +80,13 @@ MIND is context-bound. It coaches the current task and roadmap; it is not a gene
 
 ### Remember (MEMORY)
 
-Store training evidence, not a vague transcript:
+MEMORY is Skill State: an explainable, rebuildable projection derived from immutable Attempts rather than raw chat. Attempts provide the source evidence:
 
-- Goal, deadline, and available practice time.
-- Attempt outcome: independent, helped, or not solved.
-- Highest hint level used.
-- Time spent and confidence.
-- Main blocker or mistake.
-- Explicit corrections to inferred blockers or mistakes.
-- Pattern exposure and review due date.
-- Explanation formats the user explicitly found helpful.
+- Result, duration, optional confidence and note, and highest hint level.
 
-Derived strength must remain explainable. The user can inspect and correct inferred mistakes.
+MEMORY exposes pattern status, supporting evidence, last practiced, and next review.
+
+The Profile separately stores the goal, deadline, available practice time, and explicit explanation preferences. A standalone Reflection is an immutable free-text journal event stored separately from Attempts; it has no Phase 2 UI.
 
 ## Smallest Useful MVP
 
@@ -100,8 +95,8 @@ The MVP is one complete training loop:
 1. **Setup:** deadline, sessions per week, minutes per session, and rough starting level. Under two minutes.
 2. **Today:** one recommended problem or review with a timebox and a plain-language reason.
 3. **Session:** external problem link, lightweight timer, notes, and progressive MIND hints. No code runner.
-4. **Reflection:** outcome, main blocker, confidence, and an optional note. Under 30 seconds.
-5. **Feedback:** one thing done well, one correction, and one review cue.
+4. **Reflection:** result, optional confidence, and an optional note. Duration and highest hint level come from the active session. Under 30 seconds.
+5. **Feedback:** one thing done well, one review cue, the MEMORY change, and optional validated MIND feedback.
 6. **Adaptation:** update MEMORY and choose the next task.
 7. **Progress:** show the current pattern, reliable patterns, weak patterns, and due reviews without fake precision.
 
@@ -128,12 +123,12 @@ The LLM may explain and diagnose. Structured application rules own the training 
 
 - **Profile:** deadline, availability, starting level, explicit explanation preferences.
 - **Problem:** link and curated metadata.
-- **Attempt:** immutable observed outcome, time, hints, blocker, confidence, and optional note.
-- **Correction:** an immutable user correction to an inferred blocker or mistake.
-- **Skill state:** a rebuildable projection with pattern status, supporting evidence, last practiced, and next review.
+- **Attempt:** immutable observed result, duration, optional confidence and note, and highest hint level.
+- **Reflection:** an immutable standalone free-text journal event with no Phase 2 UI.
+- **Skill State (MEMORY):** a rebuildable projection from Attempts with pattern status, supporting evidence, last practiced, and next review.
 - **Recommendation:** chosen task and human-readable reason.
 
-Do not add a data object until a visible workflow needs it.
+Do not add data objects beyond this approved Phase 2 model until a visible workflow needs them.
 
 ## Honest Progress
 
@@ -156,7 +151,7 @@ The first version succeeds when:
 - Every completed session records evidence or schedules a review.
 - Every recommendation includes a reason grounded in the user's plan or history.
 - A failed, helped, or successful attempt can visibly change a future recommendation.
-- Over time, independent solves rise and repeated blockers fall.
+- Over time, independent solves rise and needed hint depth falls.
 
 The critical product test:
 

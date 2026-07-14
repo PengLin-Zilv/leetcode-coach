@@ -37,7 +37,7 @@ flowchart LR
     E -- "Yes" --> F["Use progressive MIND hint"]
     F --> D
     E -- "No or finished" --> G["End attempt"]
-    G --> H["Record outcome and blocker"]
+    G --> H["Record result and confidence"]
     H --> I["See one lesson and review cue"]
     I --> J["MEMORY updates"]
     J --> B
@@ -160,11 +160,8 @@ Purpose: turn the attempt into structured evidence in under 30 seconds.
 +--------------------------------------------------------------+
 | Finish attempt                                               |
 |                                                              |
-| Outcome                                                      |
-| [Solved alone] [Solved with help] [Not solved yet]           |
-|                                                              |
-| Main blocker                                                 |
-| [Pattern] [Approach] [Implementation] [Edge case] [Time]     |
+| Result                                                       |
+| [Solved] [Not solved yet] [Viewed solution]                  |
 |                                                              |
 | Confidence                                                   |
 | [1] [2] [3] [4] [5]                                         |
@@ -178,10 +175,10 @@ Purpose: turn the attempt into structured evidence in under 30 seconds.
 
 Rules:
 
-- Outcome, blocker, and confidence are enough; everything else is optional.
-- If solved independently, blocker can be skipped.
+- Result is required; confidence and the note are optional.
+- Duration and highest hint level come from the active practice session.
 - Use plain labels, not diagnostic jargon.
-- Let the user correct any mistake MIND later infers.
+- MIND feedback is advisory and never rewrites the Attempt.
 
 ## Screen 5: Feedback
 
@@ -209,7 +206,8 @@ Purpose: close the session with clarity and a concrete memory update.
 
 Rules:
 
-- One positive observation, one correction, one review cue.
+- Show one positive observation and one review cue.
+- Show coaching advice only when validated MIND feedback is available.
 - Praise evidence, strategy, or persistence; do not give generic applause.
 - Show exactly what MEMORY changed.
 - Do not immediately distract the user with another full problem.
@@ -271,14 +269,15 @@ These are user-controlled formats. The product should learn preferences from rep
 | Starts task | Attempt start time | Practice Session |
 | Requests hint | Hint level and format | Practice Session |
 | Ends attempt | Elapsed time | Reflection |
-| Submits reflection | Atomic attempt event; rebuilt skill and review projection | Feedback |
-| Corrects feedback | Correction event; rebuilt skill and review projection | Feedback |
+| Submits reflection | One immutable Attempt; rebuilt skill and review projection | Feedback |
 | Finishes session | Recomputed recommendation | Today |
 
-Every persistent write must be visible later in Progress or affect a recommendation.
-Attempts and corrections are durable source events. MEMORY and review state are
-rebuildable projections; a projection failure must never discard or overwrite an
-attempt.
+Every persistent write in the product loop must be visible later in Progress or affect
+a recommendation. The product Reflection screen submits one immutable Attempt. The
+standalone free-text journal Reflection is domain/repository-only and has no Phase 2
+UI. Attempts and standalone Reflections are durable source events. MEMORY is a
+rebuildable Skill State projection from Attempts; a projection failure must never
+discard or overwrite an Attempt.
 
 ## Responsive Behavior
 
