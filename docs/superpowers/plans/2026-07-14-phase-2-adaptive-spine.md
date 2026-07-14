@@ -176,7 +176,7 @@ tests/e2e/accessibility.spec.ts                        keyboard/focus/reduced-mo
 - Consumes: the Phase 1 retirement requirement and final Phase 2 entity/addendum decisions.
 - Produces: no public query-on-load endpoint; `/` redirects to `/setup` until the profile-aware redirect is added; active product documents no longer instruct future work to create Correction or blocker data.
 
-- [ ] **Step 1: Record the green Phase 1 baseline**
+- [x] **Step 1: Record the green Phase 1 baseline**
 
 Run:
 
@@ -186,7 +186,7 @@ npm run verify
 
 Expected: format, lint, type-check, all existing Vitest/Playwright tests, and build exit 0 before any deletion.
 
-- [ ] **Step 2: Update only active source-of-truth wording**
+- [x] **Step 2: Update only active source-of-truth wording**
 
 Make these exact semantic corrections without rewriting historical Phase 1 specs/plans:
 
@@ -194,7 +194,7 @@ Make these exact semantic corrections without rewriting historical Phase 1 specs
 - `CONTEXT.md`: remove Correction from MEMORY and Minimal Data Model; identify Skill State as MEMORY; replace blocker evidence with highest hint level and optional note; describe standalone Reflection separately.
 - `VISUAL_WORKFLOW_DESIGN.md`: remove blocker/correction controls and the “Corrects feedback” transition; state that the product Reflection screen submits one immutable Attempt and standalone journal Reflection has no Phase 2 UI.
 
-- [ ] **Step 3: Remove the probe and replace the root behavior**
+- [x] **Step 3: Remove the probe and replace the root behavior**
 
 Delete every listed foundation/probe file and replace `src/app/page.tsx` with:
 
@@ -206,7 +206,7 @@ export default function Home() {
 }
 ```
 
-- [ ] **Step 4: Verify retirement and document consistency**
+- [x] **Step 4: Verify retirement and document consistency**
 
 Run:
 
@@ -217,7 +217,7 @@ rg -n "Correction|blocker" AGENTS.md CONTEXT.md VISUAL_WORKFLOW_DESIGN.md
 
 Expected: both commands return no matches. Historical approved Phase 1 documents may retain their historical language.
 
-- [ ] **Step 5: Verify the green retirement**
+- [x] **Step 5: Verify the green retirement**
 
 Run:
 
@@ -230,7 +230,7 @@ npm run build
 
 Expected: all exit 0; the build contains `/` and no foundation feature.
 
-- [ ] **Step 6: Commit the retirement**
+- [x] **Step 6: Commit the retirement**
 
 ```bash
 git add -A -- AGENTS.md CONTEXT.md VISUAL_WORKFLOW_DESIGN.md src/app src/db/probe.server.ts src/features/foundation tests/e2e/foundation.spec.ts
@@ -265,7 +265,7 @@ git commit -m "refactor(foundation): retire the public database probe"
   `problems`, `problemPatterns`, `attempts`, `reflections`, `mindOutputs`,
   `mindOutputSourceAttempts`, and `skillStates`.
 
-- [ ] **Step 1: Write failing ID, date, and boundary tests**
+- [x] **Step 1: Write failing ID, date, and boundary tests**
 
 Cover these exact contracts:
 
@@ -301,7 +301,7 @@ expect(() =>
 
 Also reject confidence outside 1–5, negative duration, empty Reflection body, invalid date/timestamp strings, and any Profile outside `sessionsPerWeek 1–7`, `minutesPerSession 15|30|45|60`, or `startingLevel new|some|reviewing`.
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run:
 
@@ -311,7 +311,7 @@ npm test -- src/lib/id.test.ts src/lib/utc-date.test.ts src/features/training/co
 
 Expected: FAIL because the modules do not exist.
 
-- [ ] **Step 3: Install UUID support and implement shared boundaries**
+- [x] **Step 3: Install UUID support and implement shared boundaries**
 
 Run:
 
@@ -335,7 +335,7 @@ load. Use Zod to export `profileInputSchema`, `attemptInputSchema`,
 `z.iso.datetime({ offset: true })`; normalize optional empty strings to `undefined`
 before parsing.
 
-- [ ] **Step 4: Define the exact ten-table schema**
+- [x] **Step 4: Define the exact ten-table schema**
 
 Use text UUID primary keys without database defaults; integer `timestamp_ms` columns for timestamps; ISO `YYYY-MM-DD` text for dates; `ON DELETE RESTRICT` foreign keys; named checks and indexes.
 
@@ -354,7 +354,7 @@ Use text UUID primary keys without database defaults; integer `timestamp_ms` col
 
 Do not add Recommendation, Review, Correction, Session, AttemptDraft, source-tag, or projection-metadata tables. Keep `source` open to later non-empty tag values; enforce `neetcode-150` at the seed boundary instead of requiring a future schema migration.
 
-- [ ] **Step 5: Run RED to GREEN before migration generation**
+- [x] **Step 5: Run RED to GREEN before migration generation**
 
 Run:
 
@@ -366,7 +366,7 @@ npm run typecheck
 
 Expected: all focused tests and checks exit 0.
 
-- [ ] **Step 6: Generate and review the first domain migration**
+- [x] **Step 6: Generate and review the first domain migration**
 
 Run:
 
@@ -380,7 +380,7 @@ Update `drizzle/README.md` to identify `0000_adaptive_spine.sql` as the reviewed
 first domain migration and retain the mandatory generate → human review → commit
 schema plus SQL → explicit migrate sequence.
 
-- [ ] **Step 7: Verify schema and migration together**
+- [x] **Step 7: Verify schema and migration together**
 
 Run:
 
@@ -394,7 +394,7 @@ npm run build
 
 Expected: all exit 0.
 
-- [ ] **Step 8: Commit schema and generated SQL atomically**
+- [x] **Step 8: Commit schema and generated SQL atomically**
 
 ```bash
 git add package.json package-lock.json src/db/schema.ts src/lib src/features/training/contracts.ts src/features/training/contracts.test.ts drizzle
@@ -423,7 +423,7 @@ git commit -m "feat(database): add the adaptive spine schema"
   `seedCatalog(database, seed, ids: IdGenerator, clock: Clock): Promise<void>`,
   and guarded `db:seed:local` / `db:seed:production` commands.
 
-- [ ] **Step 1: Copy the authoritative file verbatim**
+- [x] **Step 1: Copy the authoritative file verbatim**
 
 Create `src/features/catalog/neetcode-150-list.json` byte-for-byte from:
 
@@ -435,7 +435,7 @@ Do not normalize, reorder, repair, or enrich the file.
 Add its exact path to `.prettierignore` so repository-wide formatting does not
 rewrite the authoritative input.
 
-- [ ] **Step 2: Write failing seed-boundary tests**
+- [x] **Step 2: Write failing seed-boundary tests**
 
 Import the JSON as `unknown` and assert:
 
@@ -471,7 +471,7 @@ expect(seed.groupAliases["2-D Dynamic Programming"]).toBe("2-d-dp");
 
 Reject a missing URL, missing `nurl`, unknown group, duplicate title/URL, unknown difficulty, or count other than exactly 18/150.
 
-- [ ] **Step 3: Run the boundary test and verify RED**
+- [x] **Step 3: Run the boundary test and verify RED**
 
 Run:
 
@@ -481,7 +481,7 @@ npm test -- src/features/catalog/seed-data.test.ts
 
 Expected: FAIL because the roadmap and mapper do not exist.
 
-- [ ] **Step 4: Implement canonical roadmap and deterministic mapping**
+- [x] **Step 4: Implement canonical roadmap and deterministic mapping**
 
 Export `PATTERN_DEFINITIONS` in this exact canonical order:
 
@@ -559,7 +559,7 @@ export const ESTIMATED_MINUTES = {
 } as const;
 ```
 
-- [ ] **Step 5: Run the pure seed test GREEN**
+- [x] **Step 5: Run the pure seed test GREEN**
 
 Run:
 
@@ -569,7 +569,7 @@ npm test -- src/features/catalog/seed-data.test.ts
 
 Expected: PASS with the exact counts and mappings above.
 
-- [ ] **Step 6: Write the failing real-database idempotency test**
+- [x] **Step 6: Write the failing real-database idempotency test**
 
 Use `createTestDatabase()` to migrate a unique temporary libSQL file, invoke
 `seedCatalog` twice with the fixed clock
@@ -591,7 +591,7 @@ expect(await rowCount(database, skillStates)).toBe(18);
 
 Also assert every initial Skill State is `unseen` with `recentSuccess = 0` and `nextReviewDate = null`.
 
-- [ ] **Step 7: Run the integration test and verify RED**
+- [x] **Step 7: Run the integration test and verify RED**
 
 Run:
 
@@ -601,7 +601,7 @@ npm test -- scripts/catalog-seed.test.ts
 
 Expected: FAIL because the database seeder does not exist.
 
-- [ ] **Step 8: Implement transactional, idempotent seeding**
+- [x] **Step 8: Implement transactional, idempotent seeding**
 
 In one transaction:
 
@@ -622,7 +622,7 @@ Add:
 }
 ```
 
-- [ ] **Step 9: Run RED to GREEN and seed the local database**
+- [x] **Step 9: Run RED to GREEN and seed the local database**
 
 Run:
 
@@ -638,7 +638,7 @@ npm run build
 
 Expected: tests pass; both seed runs report 18 patterns/21 edges/150 problems/150 mappings without duplication; all checks exit 0.
 
-- [ ] **Step 10: Commit the source and seed path**
+- [x] **Step 10: Commit the source and seed path**
 
 ```bash
 git add .prettierignore src/features/catalog src/test scripts/catalog-seed.ts scripts/catalog-seed.test.ts scripts/seed-catalog.ts package.json
@@ -657,7 +657,7 @@ git commit -m "feat(catalog): seed the authoritative NeetCode 150"
 - Consumes: `PatternAttemptEvidence[]` plus an injected `now: Date`.
 - Produces: `isIndependentSuccess(attempt): boolean`, `projectSkillState(input): ProjectedSkillState`, `projectAllSkillStates(input): ProjectedSkillState[]`, and `getSkillDisplayState(state, today): SkillDisplayState`.
 
-- [ ] **Step 1: Write the failing mastery tests**
+- [x] **Step 1: Write the failing mastery tests**
 
 Cover these exact behaviors:
 
@@ -701,7 +701,7 @@ expect(
 
 Also prove two independent solves of the same problem remain `practicing`, a later failure pulls review to +1 day without erasing prior reliable evidence, only the latest three attempts contribute to `recentSuccess`, backdated events sort by `occurredAt` then ID, and `nextReviewDate <= today` derives `review_due`.
 
-- [ ] **Step 2: Run the projection test and verify RED**
+- [x] **Step 2: Run the projection test and verify RED**
 
 Run:
 
@@ -711,7 +711,7 @@ npm test -- src/features/memory/project-skill-state.test.ts
 
 Expected: FAIL because the projection does not exist.
 
-- [ ] **Step 3: Implement the minimal pure projection**
+- [x] **Step 3: Implement the minimal pure projection**
 
 Use this classification:
 
@@ -734,7 +734,7 @@ const mastery =
 Compute the review date from the latest chronological attempt: +1 for non-independent, +3 for an independent practicing state, +7 for an independent reliable state. Do not read system time or mutate input arrays.
 Set `lastComputedAt` from the injected `now` in every projected row.
 
-- [ ] **Step 4: Run RED to GREEN and all current unit checks**
+- [x] **Step 4: Run RED to GREEN and all current unit checks**
 
 Run:
 
@@ -748,7 +748,7 @@ npm run build
 
 Expected: all exit 0.
 
-- [ ] **Step 5: Commit the projection rule**
+- [x] **Step 5: Commit the projection rule**
 
 ```bash
 git add src/features/memory
@@ -769,7 +769,7 @@ git commit -m "feat(memory): derive explainable skill state from attempts"
 - Consumes: `RecommendationInput = { profile, patterns, prerequisites, problems, skillStates, attempts, now }`.
 - Produces: `recommendNext(input): RecommendationResult` and `formatRecommendationReason(factors): string`, where success contains exactly one Problem, one Pattern, structured `RecommendationFactors`, and copy generated from those factors.
 
-- [ ] **Step 1: Write failing prerequisite and first-task tests**
+- [x] **Step 1: Write failing prerequisite and first-task tests**
 
 Construct small fixtures with the approved roadmap semantics and assert:
 
@@ -805,7 +805,7 @@ expect(
 
 The custom matcher may be replaced by direct discriminated-union assertions. Prove Binary Search remains ineligible until Two Pointers is reliable and Two Pointers remains ineligible until Arrays & Hashing is reliable.
 
-- [ ] **Step 2: Write failing due-review, session-fit, and adaptation tests**
+- [x] **Step 2: Write failing due-review, session-fit, and adaptation tests**
 
 Assert:
 
@@ -817,7 +817,7 @@ Assert:
 6. Identical input and clock always return a byte-equivalent result.
 7. Empty catalog returns `{ status: "unavailable", reason: "catalog_empty" }`; no fitting candidate returns `no_session_fit`.
 
-- [ ] **Step 3: Write the failing reason-correspondence tests**
+- [x] **Step 3: Write the failing reason-correspondence tests**
 
 Use exact factors, not free-form recommendation text:
 
@@ -837,7 +837,7 @@ if (recommendation.status === "recommended") {
 
 Also snapshot exact `prerequisite_building`, `continue_pattern`, and `next_pattern` templates. Every noun/date/time in copy must be present in the factors object.
 
-- [ ] **Step 4: Run the focused tests and verify RED**
+- [x] **Step 4: Run the focused tests and verify RED**
 
 Run:
 
@@ -847,7 +847,7 @@ npm test -- src/features/recommendation/recommend-next.test.ts src/features/reco
 
 Expected: FAIL because the recommendation modules do not exist.
 
-- [ ] **Step 5: Implement eligibility and the stable ranking tuple**
+- [x] **Step 5: Implement eligibility and the stable ranking tuple**
 
 Build eligible patterns only when every direct prerequisite is `reliable`. Filter problems to `estimatedMinutes <= profile.minutesPerSession`. Rank remaining candidates lexicographically by:
 
@@ -864,7 +864,7 @@ Build eligible patterns only when every direct prerequisite is `reliable`. Filte
 
 The ID is only the final impossible-tie breaker; no random value or database row order may affect selection.
 
-- [ ] **Step 6: Implement factor-owned reason templates**
+- [x] **Step 6: Implement factor-owned reason templates**
 
 Use a discriminated union:
 
@@ -901,7 +901,7 @@ export type RecommendationFactors =
 
 Do not accept an arbitrary reason string as input and do not call MIND.
 
-- [ ] **Step 7: Run RED to GREEN and the current suite**
+- [x] **Step 7: Run RED to GREEN and the current suite**
 
 Run:
 
@@ -915,7 +915,7 @@ npm run build
 
 Expected: all exit 0 and all four reason shapes are exact.
 
-- [ ] **Step 8: Commit deterministic selection**
+- [x] **Step 8: Commit deterministic selection**
 
 ```bash
 git add src/features/recommendation
@@ -949,7 +949,7 @@ git commit -m "feat(recommendation): select one explainable next problem"
   exports `createTrainingRepository(database): TrainingRepository` for injected
   integration tests and `getTrainingRepository(): TrainingRepository` for runtime.
 
-- [ ] **Step 1: Define the application persistence port**
+- [x] **Step 1: Define the application persistence port**
 
 The pure port must expose no Drizzle/libSQL types:
 
@@ -972,7 +972,7 @@ export interface TrainingRepository {
 
 `insertAttempt` and `insertReflection` are the only event write methods. Do not expose update/delete/upsert for either event.
 
-- [ ] **Step 2: Write the failing event-first use-case test**
+- [x] **Step 2: Write the failing event-first use-case test**
 
 Inject fakes and force projection replacement to fail:
 
@@ -1001,7 +1001,7 @@ expect(repository.attempts[0]?.result).toBe("solved");
 Also assert validation failure writes nothing and successful completion returns
 `memory: { status: "updated" }`.
 
-- [ ] **Step 3: Run the use-case test and verify RED**
+- [x] **Step 3: Run the use-case test and verify RED**
 
 Run:
 
@@ -1011,7 +1011,7 @@ npm test -- src/features/training/complete-attempt.test.ts
 
 Expected: FAIL because the port/use case do not exist.
 
-- [ ] **Step 4: Implement the event-first use case**
+- [x] **Step 4: Implement the event-first use case**
 
 The order is mandatory:
 
@@ -1038,7 +1038,7 @@ Never read or derive Skill State before the Attempt commit, and never wrap Attem
 insertion and projection replacement in the same transaction. Feedback derives its
 before/after delta later by excluding/including the persisted Attempt.
 
-- [ ] **Step 5: Write failing real-repository tests**
+- [x] **Step 5: Write failing real-repository tests**
 
 Against `createTestDatabase()`, prove:
 
@@ -1049,7 +1049,7 @@ Against `createTestDatabase()`, prove:
 - `replaceSkillStates` atomically upserts exactly 18 rows and preserves existing Skill State IDs.
 - Foreign keys reject an Attempt for a missing Problem.
 
-- [ ] **Step 6: Run the repository test and verify RED**
+- [x] **Step 6: Run the repository test and verify RED**
 
 Run:
 
@@ -1059,7 +1059,7 @@ npm test -- src/features/training/training-repository.integration.test.ts
 
 Expected: FAIL because the server-only Drizzle adapter does not exist.
 
-- [ ] **Step 7: Implement the server-only repositories and rebuild**
+- [x] **Step 7: Implement the server-only repositories and rebuild**
 
 Every runtime repository file starts with:
 
@@ -1100,7 +1100,7 @@ Add exact operator scripts:
 Production invocation requires `--confirm-production` through the existing protected
 target policy.
 
-- [ ] **Step 8: Write the failing persisted adaptive-loop integration test**
+- [x] **Step 8: Write the failing persisted adaptive-loop integration test**
 
 Using the real migrated/seeded temporary database:
 
@@ -1112,7 +1112,7 @@ Using the real migrated/seeded temporary database:
 6. Persist an independent solve for that distinct problem.
 7. Assert Arrays & Hashing becomes `reliable` and the third Today selects `Valid Palindrome` from Two Pointers.
 
-- [ ] **Step 9: Run the persisted proof RED to GREEN**
+- [x] **Step 9: Run the persisted proof RED to GREEN**
 
 Run:
 
@@ -1126,7 +1126,7 @@ npm run build
 
 Expected: all exit 0; the second recommendation differs after one persisted event, and the third crosses the legitimate prerequisite boundary after two distinct independent solves.
 
-- [ ] **Step 10: Commit the persisted adaptive spine**
+- [x] **Step 10: Commit the persisted adaptive spine**
 
 ```bash
 git add src/features/training src/features/memory/rebuild-memory.server.ts src/features/recommendation/get-today.server.ts src/test/server-only.ts scripts/rebuild-memory.ts vitest.config.ts package.json
