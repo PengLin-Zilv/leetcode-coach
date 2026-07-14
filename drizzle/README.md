@@ -1,7 +1,8 @@
 # Migration files
 
-This directory holds generated, reviewed, version-controlled SQL migrations. Phase 1
-intentionally has no generated migration because `src/db/schema.ts` has no tables.
+This directory holds generated, reviewed, version-controlled SQL migrations.
+`0000_adaptive_spine.sql` is the reviewed first domain migration. It creates the ten
+Phase 2 adaptive-spine tables and their required constraints and indexes.
 
 For every schema change:
 
@@ -13,3 +14,8 @@ For every schema change:
 
 Never generate or apply migrations from `npm run build`, a Vercel build, or an
 automatic deployment hook.
+
+Drizzle's SQLite renderer preserves explicit foreign-key and composite-primary-key
+names in `src/db/schema.ts` and the generated snapshot, while the SQL migration
+renders those clauses without `CONSTRAINT <name>`. Review the schema, snapshot, and
+SQL together to confirm both the declared names and the executable SQLite semantics.

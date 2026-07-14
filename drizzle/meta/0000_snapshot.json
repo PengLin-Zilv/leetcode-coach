@@ -1,0 +1,820 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "3802de78-c558-47b6-86f0-b74cf9e77f22",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "attempts": {
+      "name": "attempts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "problem_id": {
+          "name": "problem_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "duration_minutes": {
+          "name": "duration_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "highest_hint_level": {
+          "name": "highest_hint_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "attempts_problem_id_occurred_at_idx": {
+          "name": "attempts_problem_id_occurred_at_idx",
+          "columns": [
+            "problem_id",
+            "occurred_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "attempts_problem_id_fk": {
+          "name": "attempts_problem_id_fk",
+          "tableFrom": "attempts",
+          "tableTo": "problems",
+          "columnsFrom": [
+            "problem_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "attempts_result_check": {
+          "name": "attempts_result_check",
+          "value": "\"attempts\".\"result\" in ('solved', 'not_solved', 'viewed_solution')"
+        },
+        "attempts_duration_minutes_check": {
+          "name": "attempts_duration_minutes_check",
+          "value": "\"attempts\".\"duration_minutes\" >= 0"
+        },
+        "attempts_confidence_check": {
+          "name": "attempts_confidence_check",
+          "value": "\"attempts\".\"confidence\" is null or \"attempts\".\"confidence\" between 1 and 5"
+        },
+        "attempts_highest_hint_level_check": {
+          "name": "attempts_highest_hint_level_check",
+          "value": "\"attempts\".\"highest_hint_level\" between 0 and 4"
+        },
+        "attempts_occurred_before_created_check": {
+          "name": "attempts_occurred_before_created_check",
+          "value": "\"attempts\".\"occurred_at\" <= \"attempts\".\"created_at\""
+        }
+      }
+    },
+    "mind_output_source_attempts": {
+      "name": "mind_output_source_attempts",
+      "columns": {
+        "mind_output_id": {
+          "name": "mind_output_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "mind_output_source_attempts_attempt_id_idx": {
+          "name": "mind_output_source_attempts_attempt_id_idx",
+          "columns": [
+            "attempt_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "mind_output_source_attempts_mind_output_id_fk": {
+          "name": "mind_output_source_attempts_mind_output_id_fk",
+          "tableFrom": "mind_output_source_attempts",
+          "tableTo": "mind_outputs",
+          "columnsFrom": [
+            "mind_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "mind_output_source_attempts_attempt_id_fk": {
+          "name": "mind_output_source_attempts_attempt_id_fk",
+          "tableFrom": "mind_output_source_attempts",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "mind_output_source_attempts_pk": {
+          "columns": [
+            "mind_output_id",
+            "attempt_id"
+          ],
+          "name": "mind_output_source_attempts_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "mind_outputs": {
+      "name": "mind_outputs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pattern_id": {
+          "name": "pattern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "generated_at": {
+          "name": "generated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "model_meta": {
+          "name": "model_meta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mind_outputs_attempt_id_fk": {
+          "name": "mind_outputs_attempt_id_fk",
+          "tableFrom": "mind_outputs",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "mind_outputs_pattern_id_fk": {
+          "name": "mind_outputs_pattern_id_fk",
+          "tableFrom": "mind_outputs",
+          "tableTo": "patterns",
+          "columnsFrom": [
+            "pattern_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "mind_outputs_body_non_empty_check": {
+          "name": "mind_outputs_body_non_empty_check",
+          "value": "length(trim(\"mind_outputs\".\"body\")) > 0"
+        },
+        "mind_outputs_shape_check": {
+          "name": "mind_outputs_shape_check",
+          "value": "(\"mind_outputs\".\"type\" = 'single' and \"mind_outputs\".\"attempt_id\" is not null and \"mind_outputs\".\"pattern_id\" is null)\n        or (\"mind_outputs\".\"type\" = 'pattern' and \"mind_outputs\".\"attempt_id\" is null and \"mind_outputs\".\"pattern_id\" is not null)"
+        }
+      }
+    },
+    "pattern_prerequisites": {
+      "name": "pattern_prerequisites",
+      "columns": {
+        "pattern_id": {
+          "name": "pattern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "prerequisite_pattern_id": {
+          "name": "prerequisite_pattern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "pattern_prerequisites_prerequisite_pattern_id_idx": {
+          "name": "pattern_prerequisites_prerequisite_pattern_id_idx",
+          "columns": [
+            "prerequisite_pattern_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "pattern_prerequisites_pattern_id_fk": {
+          "name": "pattern_prerequisites_pattern_id_fk",
+          "tableFrom": "pattern_prerequisites",
+          "tableTo": "patterns",
+          "columnsFrom": [
+            "pattern_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "pattern_prerequisites_prerequisite_pattern_id_fk": {
+          "name": "pattern_prerequisites_prerequisite_pattern_id_fk",
+          "tableFrom": "pattern_prerequisites",
+          "tableTo": "patterns",
+          "columnsFrom": [
+            "prerequisite_pattern_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pattern_prerequisites_pk": {
+          "columns": [
+            "pattern_id",
+            "prerequisite_pattern_id"
+          ],
+          "name": "pattern_prerequisites_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "pattern_prerequisites_no_self_check": {
+          "name": "pattern_prerequisites_no_self_check",
+          "value": "\"pattern_prerequisites\".\"pattern_id\" <> \"pattern_prerequisites\".\"prerequisite_pattern_id\""
+        }
+      }
+    },
+    "patterns": {
+      "name": "patterns",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "patterns_name_unique": {
+          "name": "patterns_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        },
+        "patterns_slug_unique": {
+          "name": "patterns_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "patterns_name_non_empty_check": {
+          "name": "patterns_name_non_empty_check",
+          "value": "length(trim(\"patterns\".\"name\")) > 0"
+        },
+        "patterns_slug_non_empty_check": {
+          "name": "patterns_slug_non_empty_check",
+          "value": "length(trim(\"patterns\".\"slug\")) > 0"
+        }
+      }
+    },
+    "problem_patterns": {
+      "name": "problem_patterns",
+      "columns": {
+        "problem_id": {
+          "name": "problem_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pattern_id": {
+          "name": "pattern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "problem_patterns_pattern_id_idx": {
+          "name": "problem_patterns_pattern_id_idx",
+          "columns": [
+            "pattern_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "problem_patterns_problem_id_fk": {
+          "name": "problem_patterns_problem_id_fk",
+          "tableFrom": "problem_patterns",
+          "tableTo": "problems",
+          "columnsFrom": [
+            "problem_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "problem_patterns_pattern_id_fk": {
+          "name": "problem_patterns_pattern_id_fk",
+          "tableFrom": "problem_patterns",
+          "tableTo": "patterns",
+          "columnsFrom": [
+            "pattern_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "problem_patterns_pk": {
+          "columns": [
+            "problem_id",
+            "pattern_id"
+          ],
+          "name": "problem_patterns_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "problems": {
+      "name": "problems",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "number": {
+          "name": "number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "difficulty": {
+          "name": "difficulty",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "estimated_minutes": {
+          "name": "estimated_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "problems_number_unique": {
+          "name": "problems_number_unique",
+          "columns": [
+            "number"
+          ],
+          "isUnique": true
+        },
+        "problems_url_unique": {
+          "name": "problems_url_unique",
+          "columns": [
+            "url"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "problems_number_positive_check": {
+          "name": "problems_number_positive_check",
+          "value": "\"problems\".\"number\" is null or \"problems\".\"number\" > 0"
+        },
+        "problems_title_non_empty_check": {
+          "name": "problems_title_non_empty_check",
+          "value": "length(trim(\"problems\".\"title\")) > 0"
+        },
+        "problems_url_non_empty_check": {
+          "name": "problems_url_non_empty_check",
+          "value": "length(trim(\"problems\".\"url\")) > 0"
+        },
+        "problems_difficulty_minutes_check": {
+          "name": "problems_difficulty_minutes_check",
+          "value": "(\"problems\".\"difficulty\" = 'easy' and \"problems\".\"estimated_minutes\" = 15)\n        or (\"problems\".\"difficulty\" = 'medium' and \"problems\".\"estimated_minutes\" = 30)\n        or (\"problems\".\"difficulty\" = 'hard' and \"problems\".\"estimated_minutes\" = 45)"
+        },
+        "problems_source_non_empty_check": {
+          "name": "problems_source_non_empty_check",
+          "value": "length(trim(\"problems\".\"source\")) > 0"
+        }
+      }
+    },
+    "profiles": {
+      "name": "profiles",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "singleton_key": {
+          "name": "singleton_key",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deadline": {
+          "name": "deadline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sessions_per_week": {
+          "name": "sessions_per_week",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "minutes_per_session": {
+          "name": "minutes_per_session",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "starting_level": {
+          "name": "starting_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "profiles_singleton_key_unique": {
+          "name": "profiles_singleton_key_unique",
+          "columns": [
+            "singleton_key"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "profiles_singleton_key_check": {
+          "name": "profiles_singleton_key_check",
+          "value": "\"profiles\".\"singleton_key\" = 1"
+        },
+        "profiles_deadline_iso_date_check": {
+          "name": "profiles_deadline_iso_date_check",
+          "value": "length(\"profiles\".\"deadline\") = 10 and \"profiles\".\"deadline\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'"
+        },
+        "profiles_sessions_per_week_check": {
+          "name": "profiles_sessions_per_week_check",
+          "value": "\"profiles\".\"sessions_per_week\" between 1 and 7"
+        },
+        "profiles_minutes_per_session_check": {
+          "name": "profiles_minutes_per_session_check",
+          "value": "\"profiles\".\"minutes_per_session\" in (15, 30, 45, 60)"
+        },
+        "profiles_starting_level_check": {
+          "name": "profiles_starting_level_check",
+          "value": "\"profiles\".\"starting_level\" in ('new', 'some', 'reviewing')"
+        }
+      }
+    },
+    "reflections": {
+      "name": "reflections",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "reflections_occurred_at_idx": {
+          "name": "reflections_occurred_at_idx",
+          "columns": [
+            "occurred_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "reflections_body_non_empty_check": {
+          "name": "reflections_body_non_empty_check",
+          "value": "length(trim(\"reflections\".\"body\")) > 0"
+        },
+        "reflections_occurred_before_created_check": {
+          "name": "reflections_occurred_before_created_check",
+          "value": "\"reflections\".\"occurred_at\" <= \"reflections\".\"created_at\""
+        }
+      }
+    },
+    "skill_states": {
+      "name": "skill_states",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pattern_id": {
+          "name": "pattern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mastery": {
+          "name": "mastery",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recent_success": {
+          "name": "recent_success",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "next_review_date": {
+          "name": "next_review_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_computed_at": {
+          "name": "last_computed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "skill_states_next_review_date_idx": {
+          "name": "skill_states_next_review_date_idx",
+          "columns": [
+            "next_review_date"
+          ],
+          "isUnique": false
+        },
+        "skill_states_pattern_id_unique": {
+          "name": "skill_states_pattern_id_unique",
+          "columns": [
+            "pattern_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "skill_states_pattern_id_fk": {
+          "name": "skill_states_pattern_id_fk",
+          "tableFrom": "skill_states",
+          "tableTo": "patterns",
+          "columnsFrom": [
+            "pattern_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "skill_states_mastery_check": {
+          "name": "skill_states_mastery_check",
+          "value": "\"skill_states\".\"mastery\" in ('unseen', 'learning', 'practicing', 'reliable')"
+        },
+        "skill_states_recent_success_check": {
+          "name": "skill_states_recent_success_check",
+          "value": "\"skill_states\".\"recent_success\" between 0 and 3"
+        },
+        "skill_states_next_review_date_iso_check": {
+          "name": "skill_states_next_review_date_iso_check",
+          "value": "\"skill_states\".\"next_review_date\" is null or (length(\"skill_states\".\"next_review_date\") = 10 and \"skill_states\".\"next_review_date\" glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')"
+        },
+        "skill_states_unseen_consistency_check": {
+          "name": "skill_states_unseen_consistency_check",
+          "value": "(\"skill_states\".\"mastery\" = 'unseen' and \"skill_states\".\"recent_success\" = 0 and \"skill_states\".\"next_review_date\" is null)\n        or (\"skill_states\".\"mastery\" <> 'unseen' and \"skill_states\".\"next_review_date\" is not null)"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
