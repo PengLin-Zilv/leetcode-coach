@@ -1,8 +1,9 @@
 # LeetCode Coach
 
 This repository currently contains the Phase 1 walking skeleton: a strict Next.js
-application that proves the server-only Drizzle/libSQL path locally and on Vercel.
-It intentionally has no training-domain tables or product workflow yet.
+application that provides the probe needed to verify the server-only Drizzle/libSQL
+path locally and on Vercel. It intentionally has no training-domain tables or product
+workflow yet.
 
 ## Local setup
 
