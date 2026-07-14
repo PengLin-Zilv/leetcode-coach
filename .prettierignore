@@ -1,0 +1,10 @@
+.next/
+node_modules/
+playwright-report/
+test-results/
+coverage/
+dev.db
+dev.db-*
+drizzle/meta/
+AGENTS.md
+VISUAL_WORKFLOW_DESIGN.md
