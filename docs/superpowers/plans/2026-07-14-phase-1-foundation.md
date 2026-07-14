@@ -34,7 +34,7 @@
 .env.production.example                     safe production migration template
 package.json                                scripts and dependency manifest
 package-lock.json                           exact npm resolution
-next-env.d.ts                               generated Next.js type references committed for clean type-checks
+next-env.d.ts                               generated Next.js type references; ignored by Git
 next.config.ts                              Next.js configuration
 tsconfig.json                               strict compiler configuration
 eslint.config.mjs                           Next.js/TypeScript lint configuration
@@ -73,7 +73,6 @@ README.md                                    setup, verification, migration, and
 - Create: `.env.example`
 - Create: `package.json`
 - Create: `package-lock.json` via npm
-- Create: `next-env.d.ts`
 - Create: `next.config.ts`
 - Create: `tsconfig.json`
 - Create: `eslint.config.mjs`
@@ -119,7 +118,7 @@ The scripts must be:
   "build": "next build",
   "start": "next start",
   "lint": "eslint .",
-  "typecheck": "tsc --noEmit",
+  "typecheck": "next typegen && tsc --noEmit",
   "format": "prettier --write .",
   "format:check": "prettier --check .",
   "test": "vitest run",
@@ -162,6 +161,7 @@ Extend `.gitignore` with:
 ```gitignore
 node_modules/
 .next/
+next-env.d.ts
 out/
 dev.db
 dev.db-*
@@ -199,7 +199,7 @@ Expected: all four exit 0; build identifies the root route successfully; `packag
 - [ ] **Step 6: Commit the green scaffold**
 
 ```bash
-git add .nvmrc .env.example package.json package-lock.json next-env.d.ts next.config.ts tsconfig.json eslint.config.mjs .prettierrc.json .prettierignore vitest.config.ts playwright.config.ts src .gitignore
+git add .nvmrc .env.example package.json package-lock.json next.config.ts tsconfig.json eslint.config.mjs .prettierrc.json .prettierignore vitest.config.ts playwright.config.ts src .gitignore
 git commit -m "build(app): establish the Node 24 foundation"
 ```
 
