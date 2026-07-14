@@ -1,6 +1,6 @@
 # Phase 1 Foundation Design
 
-**Status:** Architecture approved; written-spec review pending
+**Status:** Approved on 2026-07-14
 
 **Product sources:** [`CONTEXT.md`](../../../CONTEXT.md), [`VISUAL_WORKFLOW_DESIGN.md`](../../../VISUAL_WORKFLOW_DESIGN.md), and [`AGENTS.md`](../../../AGENTS.md)
 
@@ -15,6 +15,7 @@ Phase 1 ends after the local checks and both test suites pass and a server-rende
 Phase 1 includes:
 
 - A Next.js modular monolith using the App Router, strict TypeScript, and the Node.js runtime.
+- A repository `.nvmrc` containing `24`; the Vercel project uses Node.js `24.x`, and `package.json` does not hard-pin `engines.node`.
 - React with CSS Modules and shared CSS custom-property tokens.
 - Zod validation for environment configuration and every external input introduced in this phase.
 - Drizzle ORM over `@libsql/client`, using `file:./dev.db` locally and Turso remotely.
@@ -47,7 +48,7 @@ Browser
 
 The application is one process and one deployable unit. Server Components render read models returned by server-only application services. Client Components, when later introduced, receive serialized data and never import database, environment, repository, or provider modules.
 
-The connectivity page is an infrastructure probe, not a product screen or permanent health dashboard. It executes a parameter-free query through the production database path. It must not render the connection URL, auth token, exception details, database location, or timing metadata.
+The connectivity page is an infrastructure probe, not a product screen or permanent health dashboard. It executes a parameter-free query through the production database path. It must not render the connection URL, auth token, exception details, database location, or timing metadata. It is removed at the start of Phase 2, before product routes are introduced; this retirement condition is recorded in the foundation module and project handoff.
 
 ## Module Boundaries
 
@@ -64,7 +65,7 @@ tests/e2e/                     Playwright browser checks
 drizzle/                       generated, reviewed, version-controlled SQL migrations
 ```
 
-Sensitive modules use a `.server.ts` suffix and import `server-only`. No shared barrel may re-export a server-only module to browser code. Database construction is centralized; route files do not instantiate clients or read secrets directly.
+Every sensitive module imports `server-only`; that import is the enforced build-time boundary. The `.server.ts` suffix is documentation only and must never be treated as enforcement. No shared barrel may re-export a server-only module to browser code. Database construction is centralized; route files do not instantiate clients or read secrets directly.
 
 The database probe depends on a minimal interface it can fake in Vitest. This interface is local to the foundation feature and is not a speculative repository abstraction for future domain entities.
 
@@ -135,7 +136,7 @@ Local completion requires fresh successful runs of:
 - Playwright against the real local application
 - Next.js production build
 
-The Vitest suite must cover a successful probe, invalid configuration, an unreachable database, and an unexpected query result without using the network. The Playwright suite must assert that the real page renders the connected state through the local libSQL file path.
+The Vitest suite must cover a successful probe, invalid configuration, an unreachable database, and an unexpected query result without using the network. The Playwright suite must assert that the real page renders the connected state through the local libSQL file path. Playwright configuration owns a `webServer` that starts the application, so the suite never relies on an undocumented manually running process.
 
 Walking-skeleton completion additionally requires:
 
