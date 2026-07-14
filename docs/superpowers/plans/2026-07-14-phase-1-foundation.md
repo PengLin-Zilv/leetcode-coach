@@ -46,6 +46,8 @@ drizzle.config.ts                           schema-to-migration generation confi
 drizzle/README.md                           migration directory policy until entities exist
 scripts/migration-policy.ts                 pure production/local migration guard
 scripts/migration-policy.test.ts            migration guard behavior
+scripts/migration-environment.ts            isolated target-file environment loader
+scripts/migration-environment.test.ts       inherited-environment isolation regression
 scripts/migrate.ts                          explicit manual migration runner
 src/app/layout.tsx                          application shell and metadata
 src/app/page.tsx                            temporary server-rendered probe page
@@ -91,7 +93,7 @@ README.md                                    setup, verification, migration, and
 - Consumes: Node.js 24 and npm.
 - Produces: standard `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `format:check`, `test`, `test:e2e`, and `verify` commands; path alias `@/* -> ./src/*`.
 
-- [ ] **Step 1: Pin the runtime and create the dependency manifest**
+- [x] **Step 1: Pin the runtime and create the dependency manifest**
 
 Create `.nvmrc` containing:
 
@@ -131,7 +133,7 @@ The scripts must be:
 }
 ```
 
-- [ ] **Step 2: Create strict framework and quality configuration**
+- [x] **Step 2: Create strict framework and quality configuration**
 
 Use strict TypeScript with `noEmit`, `isolatedModules`, Next's plugin, and the `@/*` path alias. Configure ESLint with Next core-web-vitals and TypeScript presets. Configure Prettier with LF line endings and exclude `.next`, `node_modules`, `playwright-report`, `test-results`, `dev.db`, and generated Drizzle metadata.
 
@@ -150,11 +152,11 @@ webServer: {
 use: { baseURL: 'http://127.0.0.1:3100' }
 ```
 
-- [ ] **Step 3: Create the minimal static application shell**
+- [x] **Step 3: Create the minimal static application shell**
 
 Create a semantic root layout with metadata title `LeetCode Coach` and a temporary page containing only `LeetCode Coach foundation`. Import `tokens.css` through `globals.css`. Keep CSS limited to system typography, colors, box sizing, and body defaults.
 
-- [ ] **Step 4: Protect local and generated files**
+- [x] **Step 4: Protect local and generated files**
 
 Extend `.gitignore` with:
 
@@ -183,7 +185,7 @@ TURSO_DATABASE_URL=file:./dev.db
 MIGRATION_TARGET=local
 ```
 
-- [ ] **Step 5: Format and verify the scaffold**
+- [x] **Step 5: Format and verify the scaffold**
 
 Run:
 
@@ -196,14 +198,14 @@ npm run build
 
 Expected: all four exit 0; build identifies the root route successfully; `package.json` has no `engines` key.
 
-- [ ] **Step 6: Commit the green scaffold**
+- [x] **Step 6: Commit the green scaffold**
 
 ```bash
 git add .nvmrc .env.example package.json package-lock.json next.config.ts tsconfig.json eslint.config.mjs .prettierrc.json .prettierignore vitest.config.ts playwright.config.ts src .gitignore
 git commit -m "build(app): establish the Node 24 foundation"
 ```
 
-- [ ] **Step 7: Commit the already-reviewed execution plan from the same green tree**
+- [x] **Step 7: Commit the already-reviewed execution plan from the same green tree**
 
 ```bash
 git add docs/superpowers/plans/2026-07-14-phase-1-foundation.md
@@ -223,7 +225,7 @@ git commit -m "docs(plan): record phase 1 execution steps"
 - Consumes: untrusted `Record<string, string | undefined>` environment values.
 - Produces: `parseDatabaseConfig(input): DatabaseConfig`, `InvalidDatabaseConfigurationError`, and guarded `getDatabaseConfig(): DatabaseConfig`.
 
-- [ ] **Step 1: Write failing configuration tests**
+- [x] **Step 1: Write failing configuration tests**
 
 Cover these exact cases:
 
@@ -256,7 +258,7 @@ expect(() => parseDatabaseConfig({})).toThrow(
 
 Also assert that the public error message does not contain the supplied URL or token.
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 ```bash
 npm test -- src/config/database-env.test.ts
@@ -264,7 +266,7 @@ npm test -- src/config/database-env.test.ts
 
 Expected: FAIL because `database-env` does not exist.
 
-- [ ] **Step 3: Implement the minimal parser**
+- [x] **Step 3: Implement the minimal parser**
 
 Use a Zod object with a `superRefine` rule: `file:` URLs do not require a token; every other non-empty URL does. Convert validation failure to `InvalidDatabaseConfigurationError('Database configuration is invalid')` without attaching raw input or Zod issues to the public error.
 
@@ -276,7 +278,7 @@ export function getDatabaseConfig(): DatabaseConfig {
 }
 ```
 
-- [ ] **Step 4: Run RED to GREEN and all current checks**
+- [x] **Step 4: Run RED to GREEN and all current checks**
 
 ```bash
 npm test -- src/config/database-env.test.ts
@@ -287,7 +289,7 @@ npm run build
 
 Expected: all exit 0; four configuration cases plus the redaction assertion pass.
 
-- [ ] **Step 5: Commit the validated boundary**
+- [x] **Step 5: Commit the validated boundary**
 
 ```bash
 git add src/config
@@ -309,7 +311,7 @@ git commit -m "chore(config): validate database settings at the server seam"
 - Consumes: `DatabaseProbe = () => Promise<unknown>`, `FoundationLogger`, and `getDatabaseConfig()`.
 - Produces: `checkFoundationConnectivity(probe, logger): Promise<FoundationConnectivityResult>` and guarded `probeDatabase(): Promise<unknown>`.
 
-- [ ] **Step 1: Write failing connectivity tests**
+- [x] **Step 1: Write failing connectivity tests**
 
 Define desired results through tests:
 
@@ -348,7 +350,7 @@ await expect(
 
 Assert the logger receives only a stable diagnostic code and error class/name, never the thrown message.
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 ```bash
 npm test -- src/features/foundation/connectivity.test.ts
@@ -356,7 +358,7 @@ npm test -- src/features/foundation/connectivity.test.ts
 
 Expected: FAIL because the connectivity service does not exist.
 
-- [ ] **Step 3: Implement the pure service**
+- [x] **Step 3: Implement the pure service**
 
 Use a Zod schema for `{ connected: z.literal(1) }`. Return this discriminated union:
 
@@ -374,7 +376,7 @@ type FoundationConnectivityResult =
 
 Catch errors inside the service. Map only `InvalidDatabaseConfigurationError` specially. Log a stable code and `error.name`; never log `error.message`, raw configuration, or the thrown object.
 
-- [ ] **Step 4: Add the guarded Drizzle/libSQL adapter**
+- [x] **Step 4: Add the guarded Drizzle/libSQL adapter**
 
 `client.server.ts` and `probe.server.ts` both begin with:
 
@@ -390,7 +392,7 @@ select 1 as connected
 
 Return only the first row to the service. `schema.ts` exports no tables and states that Phase 1 intentionally has no domain schema.
 
-- [ ] **Step 5: Run RED to GREEN and all current checks**
+- [x] **Step 5: Run RED to GREEN and all current checks**
 
 ```bash
 npm test -- src/features/foundation/connectivity.test.ts
@@ -401,7 +403,7 @@ npm run build
 
 Expected: all exit 0; the four result paths and log-redaction assertion pass.
 
-- [ ] **Step 6: Commit the server-only connectivity path**
+- [x] **Step 6: Commit the server-only connectivity path**
 
 ```bash
 git add src/features/foundation src/db
@@ -424,7 +426,7 @@ git commit -m "feat(foundation): add the server-only database probe"
 - Consumes: `checkFoundationConnectivity(probeDatabase, console)`.
 - Produces: a dynamic Node.js server-rendered page with accessible connected/unavailable output and an explicit Phase 2 retirement note.
 
-- [ ] **Step 1: Install the Playwright browser**
+- [x] **Step 1: Install the Playwright browser**
 
 ```bash
 npx playwright install chromium
@@ -432,7 +434,7 @@ npx playwright install chromium
 
 Expected: Chromium is available to the local test runner.
 
-- [ ] **Step 2: Write the failing browser test**
+- [x] **Step 2: Write the failing browser test**
 
 Create a test that loads `/` and asserts:
 
@@ -450,7 +452,7 @@ await expect(
 
 Also assert that the page body does not contain `file:./dev.db`, `TURSO_AUTH_TOKEN`, or `libsql://`.
 
-- [ ] **Step 3: Run the browser test and verify RED**
+- [x] **Step 3: Run the browser test and verify RED**
 
 ```bash
 npm run test:e2e -- tests/e2e/foundation.spec.ts
@@ -458,7 +460,7 @@ npm run test:e2e -- tests/e2e/foundation.spec.ts
 
 Expected: FAIL because the static scaffold does not render `Database connected`.
 
-- [ ] **Step 4: Implement the temporary server page**
+- [x] **Step 4: Implement the temporary server page**
 
 Set:
 
@@ -471,7 +473,7 @@ Call the service with `probeDatabase`. Render the heading in both states. Connec
 
 Style one calm, responsive, centered content region with CSS Modules and existing tokens. Do not add navigation, cards grids, gradients, or product controls.
 
-- [ ] **Step 5: Document mandatory retirement**
+- [x] **Step 5: Document mandatory retirement**
 
 Create `src/features/foundation/README.md` stating:
 
@@ -484,7 +486,7 @@ feature at the start of Phase 2, before adding product routes. A public route th
 a database query on every request must not survive into the product workflow.
 ```
 
-- [ ] **Step 6: Run RED to GREEN and all current checks**
+- [x] **Step 6: Run RED to GREEN and all current checks**
 
 ```bash
 npm run test:e2e -- tests/e2e/foundation.spec.ts
@@ -495,7 +497,7 @@ npm run build
 
 Expected: all exit 0; Playwright starts and stops its own Next.js server and observes the connected local file path without leaking configuration.
 
-- [ ] **Step 7: Commit the browser-visible skeleton**
+- [x] **Step 7: Commit the browser-visible skeleton**
 
 ```bash
 git add tests/e2e src/app src/styles src/features/foundation/README.md
@@ -508,6 +510,8 @@ git commit -m "feat(foundation): render the temporary connectivity page"
 
 - Create: `scripts/migration-policy.test.ts`
 - Create: `scripts/migration-policy.ts`
+- Create: `scripts/migration-environment.test.ts`
+- Create: `scripts/migration-environment.ts`
 - Create: `scripts/migrate.ts`
 - Create: `drizzle.config.ts`
 - Create: `drizzle/README.md`
@@ -519,9 +523,9 @@ git commit -m "feat(foundation): render the temporary connectivity page"
 **Interfaces:**
 
 - Consumes: CLI target `local | production`, production confirmation flag, and target-specific environment file.
-- Produces: `resolveMigrationRequest(args): MigrationRequest`, reviewed migration generation, protected local/production migration commands, and the complete Phase 1 operator runbook.
+- Produces: `resolveMigrationRequest(args): MigrationRequest`, isolated target-file parsing, reviewed migration generation, protected local/production migration commands, and the complete Phase 1 operator runbook.
 
-- [ ] **Step 1: Write failing migration-policy tests**
+- [x] **Step 1: Write failing migration-policy tests**
 
 Cover:
 
@@ -547,7 +551,7 @@ expect(() => resolveMigrationRequest(["preview"])).toThrow(
 );
 ```
 
-- [ ] **Step 2: Run the policy test and verify RED**
+- [x] **Step 2: Run the policy test and verify RED**
 
 ```bash
 npm test -- scripts/migration-policy.test.ts
@@ -555,12 +559,12 @@ npm test -- scripts/migration-policy.test.ts
 
 Expected: FAIL because the migration policy does not exist.
 
-- [ ] **Step 3: Implement policy and runner**
+- [x] **Step 3: Implement policy and runner**
 
 Implement only the tested argument policy. In `migrate.ts`:
 
 1. Resolve the target.
-2. Load exactly its environment file with `process.loadEnvFile`.
+2. Read exactly its environment file and parse it with Node.js `util.parseEnv` into an isolated object.
 3. Require `MIGRATION_TARGET` to equal the selected target.
 4. Parse database values with `parseDatabaseConfig`.
 5. Require a `file:` URL for local and a non-`file:` URL plus token for production.
@@ -569,7 +573,9 @@ Implement only the tested argument policy. In `migrate.ts`:
 
 The script may print the selected target and success/failure category, but never URL, token, raw exception message, or environment values.
 
-- [ ] **Step 4: Configure generation without a domain migration**
+Regression-test that conflicting inherited migration variables neither override the selected file nor get mutated by the runner.
+
+- [x] **Step 4: Configure generation without a domain migration**
 
 Configure Drizzle with:
 
@@ -591,11 +597,11 @@ TURSO_AUTH_TOKEN=replace-with-a-scoped-token
 MIGRATION_TARGET=production
 ```
 
-- [ ] **Step 5: Write the operator runbook**
+- [x] **Step 5: Write the operator runbook**
 
 README must document Node 24 via `.nvmrc`, install, local configuration, commands, architecture/module pattern, server-only rule, local migration, protected production migration invocation, Vercel Node `24.x` setting, Turso/Vercel environment variables, deploy verification, and Phase 2 probe retirement. State that the Vercel build command is only `npm run build` and never migrates.
 
-- [ ] **Step 6: Run RED to GREEN and the complete local suite**
+- [x] **Step 6: Run RED to GREEN and the complete local suite**
 
 ```bash
 npm test -- scripts/migration-policy.test.ts
@@ -610,7 +616,7 @@ npm run build
 
 Expected: every command exits 0. Do not commit if any warning indicates leaked configuration, an unhandled server error, or a browser-server lifecycle problem.
 
-- [ ] **Step 7: Commit migration policy and operations documentation**
+- [x] **Step 7: Commit migration policy and operations documentation**
 
 ```bash
 git add scripts drizzle.config.ts drizzle .env.production.example README.md package.json package-lock.json
