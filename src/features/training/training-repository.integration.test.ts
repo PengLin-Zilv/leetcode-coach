@@ -218,6 +218,21 @@ describe("createTrainingRepository", () => {
       ).rejects.toThrow();
       await expect(repository.getSkillStates()).resolves.toEqual(replaced);
 
+      const duplicatePatternReplacement = replacements.map((state, index) =>
+        index === replacements.length - 1
+          ? { ...state, patternId: replacements[0]!.patternId }
+          : state,
+      );
+
+      await expect(
+        repository.replaceSkillStates(duplicatePatternReplacement),
+      ).rejects.toThrow();
+      const afterDuplicateRejection = await repository.getSkillStates();
+      expect(afterDuplicateRejection).toEqual(replaced);
+      expect(JSON.stringify(afterDuplicateRejection)).toBe(
+        JSON.stringify(replaced),
+      );
+
       const invalidPatternId = createId();
       const invalidReplacement = replacements.map((state, index) =>
         index === 0 ? { ...state, patternId: invalidPatternId } : state,

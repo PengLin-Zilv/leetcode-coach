@@ -37,10 +37,25 @@ function deterministicIds(): IdGenerator {
   return () => attemptId;
 }
 
+function deferredCommit() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+
+  return { promise, resolve };
+}
+
 class FakeTrainingRepository implements TrainingRepository {
   readonly attempts: Attempt[] = [];
   readonly reflections: Reflection[] = [];
   readonly callOrder: string[] = [];
+
+  constructor(
+    private readonly commitAttempt: (
+      attempt: Attempt,
+    ) => Promise<void> = async () => undefined,
+  ) {}
 
   async getProfile(): Promise<Profile | null> {
     return null;
@@ -74,6 +89,7 @@ class FakeTrainingRepository implements TrainingRepository {
 
   async insertAttempt(attempt: Attempt): Promise<void> {
     this.callOrder.push("insertAttempt");
+    await this.commitAttempt(attempt);
     this.attempts.push(attempt);
   }
 
@@ -89,6 +105,66 @@ class FakeTrainingRepository implements TrainingRepository {
 }
 
 describe("completeAttempt", () => {
+  it("waits for the Attempt commit before rebuilding MEMORY or completing", async () => {
+    const commit = deferredCommit();
+    const repository = new FakeTrainingRepository(async () => commit.promise);
+    const rebuildMemory = vi.fn(async () => []);
+    let settled = false;
+
+    const completion = completeAttempt(
+      {
+        repository,
+        ids: deterministicIds(),
+        clock: fixedClock(now),
+        rebuildMemory,
+      },
+      validAttemptInput,
+    ).finally(() => {
+      settled = true;
+    });
+
+    await Promise.resolve();
+    expect(repository.callOrder).toEqual(["insertAttempt"]);
+    expect(repository.attempts).toHaveLength(0);
+    expect(rebuildMemory).not.toHaveBeenCalled();
+    expect(settled).toBe(false);
+
+    commit.resolve();
+
+    await expect(completion).resolves.toEqual({
+      status: "completed",
+      attemptId,
+      memory: { status: "updated" },
+    });
+    expect(repository.attempts).toHaveLength(1);
+    expect(rebuildMemory).toHaveBeenCalledOnce();
+    expect(settled).toBe(true);
+  });
+
+  it("propagates Attempt insertion failure without rebuilding or completing", async () => {
+    const insertionError = new Error("attempt commit failed");
+    const repository = new FakeTrainingRepository(async () => {
+      throw insertionError;
+    });
+    const rebuildMemory = vi.fn(async () => []);
+
+    await expect(
+      completeAttempt(
+        {
+          repository,
+          ids: deterministicIds(),
+          clock: fixedClock(now),
+          rebuildMemory,
+        },
+        validAttemptInput,
+      ),
+    ).rejects.toBe(insertionError);
+
+    expect(repository.callOrder).toEqual(["insertAttempt"]);
+    expect(repository.attempts).toHaveLength(0);
+    expect(rebuildMemory).not.toHaveBeenCalled();
+  });
+
   it("keeps the committed Attempt when MEMORY rebuilding fails", async () => {
     const repository = new FakeTrainingRepository();
 

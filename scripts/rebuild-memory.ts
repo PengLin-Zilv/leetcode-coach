@@ -21,8 +21,8 @@ import {
   rebuildMemoryProjection,
   type MemoryProjectionRepository,
 } from "../src/features/memory/rebuild-memory";
-import { systemClock } from "../src/lib/clock";
-import { createId } from "../src/lib/id";
+import { systemClock, type Clock } from "../src/lib/clock";
+import { createId, type IdGenerator } from "../src/lib/id";
 import { readMigrationEnvironment } from "./migration-environment";
 import {
   resolveMigrationRequest,
@@ -142,11 +142,15 @@ function openConnection(config: DatabaseConfig): MemoryRebuildConnection {
   }
 }
 
-async function rebuild(database: MemoryRebuildDatabase): Promise<number> {
+export async function rebuildOperatorMemory(
+  database: MemoryRebuildDatabase,
+  ids: IdGenerator,
+  clock: Clock,
+): Promise<number> {
   const states = await rebuildMemoryProjection({
     repository: createMemoryRepository(database),
-    ids: createId,
-    clock: systemClock,
+    ids,
+    clock,
   });
 
   return states.length;
@@ -155,7 +159,7 @@ async function rebuild(database: MemoryRebuildDatabase): Promise<number> {
 const defaultDependencies: MemoryRebuildCommandDependencies = {
   readEnvironment: readMigrationEnvironment,
   openConnection,
-  rebuild,
+  rebuild: (database) => rebuildOperatorMemory(database, createId, systemClock),
   info: (message) => console.info(message),
   error: (message) => console.error(message),
 };

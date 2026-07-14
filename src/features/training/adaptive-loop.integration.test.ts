@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
+import { describe, expect, it, vi } from "vitest";
 
 import { seedCatalog } from "../../../scripts/catalog-seed";
 import rawSeed from "../catalog/neetcode-150-list.json";
 import { buildCatalogSeed } from "../catalog/seed-data";
+import { skillStates } from "../../db/schema";
 import { rebuildMemory } from "../memory/rebuild-memory.server";
 import {
   getTodayRecommendation,
@@ -65,6 +67,122 @@ function requireRecommendation(
 }
 
 describe("persisted adaptation loop", () => {
+  it("self-heals stale MEMORY from a durable Attempt on the next Today load", async () => {
+    const { close, database } = await createTestDatabase();
+
+    try {
+      await seedCatalog(
+        database,
+        buildCatalogSeed(rawSeed as unknown),
+        createId,
+        clock,
+      );
+
+      let services = createServices(database);
+      await services.repository.saveProfile({
+        id: createId(),
+        deadline: "2026-08-31",
+        sessionsPerWeek: 4,
+        minutesPerSession: 30,
+        startingLevel: "new",
+      });
+      const first = requireRecommendation(await services.getToday());
+      expect(first.problem.title).toBe("Contains Duplicate");
+
+      const completion = await completeAttempt(
+        {
+          repository: services.repository,
+          ids: createId,
+          clock,
+          rebuildMemory: async () => {
+            throw new Error("forced projection failure");
+          },
+        },
+        {
+          problemId: first.problem.id,
+          result: "solved",
+          durationMinutes: 15,
+          highestHintLevel: 0,
+          occurredAt: "2026-07-14T14:30:00.000Z",
+        },
+      );
+
+      expect(completion).toMatchObject({
+        status: "completed",
+        memory: { status: "stale", reason: "projection_failed" },
+      });
+      await expect(
+        services.repository.getAttempt(completion.attemptId),
+      ).resolves.toMatchObject({
+        id: completion.attemptId,
+        problemId: first.problem.id,
+        result: "solved",
+        highestHintLevel: 0,
+      });
+      await expect(services.repository.getAttempts()).resolves.toHaveLength(1);
+
+      services = createServices(database);
+      await expect(arraysMastery(services.repository)).resolves.toBe("unseen");
+
+      const recoveredToday = requireRecommendation(await services.getToday());
+
+      await expect(arraysMastery(services.repository)).resolves.toBe(
+        "practicing",
+      );
+      expect(recoveredToday.pattern.slug).toBe("arrays-hashing");
+      expect(recoveredToday.problem.id).not.toBe(first.problem.id);
+      expect(recoveredToday.problem.title).not.toBe("Contains Duplicate");
+      expect(recoveredToday.factors).toMatchObject({
+        kind: "continue_pattern",
+        mastery: "practicing",
+      });
+    } finally {
+      await close();
+    }
+  });
+
+  it("generates one ID for one missing state and preserves the other 17", async () => {
+    const { close, database } = await createTestDatabase();
+
+    try {
+      await seedCatalog(
+        database,
+        buildCatalogSeed(rawSeed as unknown),
+        createId,
+        clock,
+      );
+      const repository = createTrainingRepository(database);
+      const initial = await repository.getSkillStates();
+      const [missing, ...preserved] = initial;
+
+      if (!missing) {
+        throw new Error("Expected seeded Skill States");
+      }
+
+      await database.delete(skillStates).where(eq(skillStates.id, missing.id));
+
+      const generatedId = "0190f6f5-9b5a-7a22-8c44-123456789abe";
+      const ids = vi.fn(() => generatedId);
+      const rebuilt = await rebuildMemory({ repository, ids, clock });
+      const persisted = await repository.getSkillStates();
+      const persistedByPattern = new Map(
+        persisted.map((state) => [state.patternId, state]),
+      );
+
+      expect(ids).toHaveBeenCalledOnce();
+      expect(rebuilt).toHaveLength(18);
+      expect(persisted).toHaveLength(18);
+      expect(persistedByPattern.get(missing.patternId)?.id).toBe(generatedId);
+      expect(
+        preserved.every(
+          ({ id, patternId }) => persistedByPattern.get(patternId)?.id === id,
+        ),
+      ).toBe(true);
+    } finally {
+      await close();
+    }
+  });
+
   it("changes two Today cycles from persisted evidence across service reloads", async () => {
     const { close, database } = await createTestDatabase();
 

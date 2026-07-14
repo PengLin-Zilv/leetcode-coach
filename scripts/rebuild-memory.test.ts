@@ -1,9 +1,21 @@
+import { count, eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
+import rawSeed from "../src/features/catalog/neetcode-150-list.json";
+import { buildCatalogSeed } from "../src/features/catalog/seed-data";
+import { attempts, patterns, problems, skillStates } from "../src/db/schema";
+import type { Clock } from "../src/lib/clock";
+import { createId } from "../src/lib/id";
+import { createTestDatabase } from "../src/test/database";
+import { seedCatalog } from "./catalog-seed";
 import {
+  rebuildOperatorMemory,
   runMemoryRebuildCommand,
   type MemoryRebuildCommandDependencies,
 } from "./rebuild-memory";
+
+const now = new Date("2026-07-14T15:00:00.000Z");
+const fixedClock: Clock = { now: () => new Date(now.getTime()) };
 
 function createHarness(
   overrides: Partial<MemoryRebuildCommandDependencies> = {},
@@ -136,5 +148,66 @@ describe("runMemoryRebuildCommand", () => {
     expect(loggedOutput).not.toContain(privateToken);
     expect(loggedOutput).not.toContain(rawMessage);
     expect(loggedOutput).not.toContain(".env");
+  });
+});
+
+describe("rebuildOperatorMemory", () => {
+  it("rebuilds persisted Attempt evidence through the script-local adapter", async () => {
+    const { close, database } = await createTestDatabase();
+
+    try {
+      await seedCatalog(
+        database,
+        buildCatalogSeed(rawSeed as unknown),
+        createId,
+        fixedClock,
+      );
+      const [problem] = await database
+        .select({ id: problems.id })
+        .from(problems)
+        .where(eq(problems.title, "Contains Duplicate"));
+      const [pattern] = await database
+        .select({ id: patterns.id })
+        .from(patterns)
+        .where(eq(patterns.slug, "arrays-hashing"));
+
+      if (!problem || !pattern) {
+        throw new Error("Expected the seeded Arrays problem and Pattern");
+      }
+
+      await database.insert(attempts).values({
+        id: createId(),
+        problemId: problem.id,
+        result: "solved",
+        durationMinutes: 15,
+        confidence: null,
+        note: null,
+        highestHintLevel: 0,
+        occurredAt: new Date("2026-07-14T14:30:00.000Z"),
+        createdAt: fixedClock.now(),
+      });
+
+      await expect(
+        rebuildOperatorMemory(database, createId, fixedClock),
+      ).resolves.toBe(18);
+
+      const [arraysState] = await database
+        .select()
+        .from(skillStates)
+        .where(eq(skillStates.patternId, pattern.id));
+      const [stateCount] = await database
+        .select({ value: count() })
+        .from(skillStates);
+
+      expect(stateCount?.value).toBe(18);
+      expect(arraysState).toMatchObject({
+        mastery: "practicing",
+        recentSuccess: 1,
+        nextReviewDate: "2026-07-17",
+        lastComputedAt: now,
+      });
+    } finally {
+      await close();
+    }
   });
 });
