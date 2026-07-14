@@ -6,5 +6,6 @@ coverage/
 dev.db
 dev.db-*
 drizzle/meta/
+src/features/catalog/neetcode-150-list.json
 AGENTS.md
 VISUAL_WORKFLOW_DESIGN.md
