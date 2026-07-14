@@ -1160,7 +1160,7 @@ At this point the schema/migration, authoritative seed, deterministic rules, Att
   validated `single | pattern` outputs, deterministic test fake, and runtime
   unavailable results.
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 Define and test:
 
@@ -1184,7 +1184,7 @@ expect(pattern.type).toBe("pattern");
 
 Reject `single` with Pattern/source IDs, `pattern` with Attempt ID, both IDs, neither ID, empty body, malformed UUID, invalid hint depth, or additional unrecognized keys.
 
-- [ ] **Step 2: Write failing gateway behavior tests**
+- [x] **Step 2: Write failing gateway behavior tests**
 
 Using only `FakeMindGateway` and an in-memory output repository, prove:
 
@@ -1198,7 +1198,7 @@ Using only `FakeMindGateway` and an in-memory output repository, prove:
    `pattern` row plus source links in one transaction, and rejects source links for a
    `single` output.
 
-- [ ] **Step 3: Run the MIND tests and verify RED**
+- [x] **Step 3: Run the MIND tests and verify RED**
 
 Run:
 
@@ -1208,7 +1208,7 @@ npm test -- src/features/mind/contracts.test.ts src/features/mind/request-mind.t
 
 Expected: FAIL because no MIND boundary exists.
 
-- [ ] **Step 4: Implement the narrow gateway and parse seam**
+- [x] **Step 4: Implement the narrow gateway and parse seam**
 
 Use:
 
@@ -1250,11 +1250,11 @@ export type PracticeHintResult =
 
 `request-mind.ts` owns Zod parsing and is the only code allowed to pass parsed output to persistence. Do not implement credentials, provider SDKs, schema repair, retries, or network calls; those begin with the future live-provider task.
 
-- [ ] **Step 5: Implement runtime/fake separation**
+- [x] **Step 5: Implement runtime/fake separation**
 
 `UnavailableMindGateway` always returns `not_configured` and begins with `import "server-only"`. `FakeMindGateway` lives under `testing/`, accepts explicit raw fixtures, and is imported only from tests. No environment flag may select it at runtime.
 
-- [ ] **Step 6: Run RED to GREEN and all current checks**
+- [x] **Step 6: Run RED to GREEN and all current checks**
 
 Run:
 
@@ -1268,7 +1268,7 @@ npm run build
 
 Expected: all exit 0; no test makes a network request.
 
-- [ ] **Step 7: Commit the trustworthy MIND seam**
+- [x] **Step 7: Commit the trustworthy MIND seam**
 
 ```bash
 git add src/features/mind
