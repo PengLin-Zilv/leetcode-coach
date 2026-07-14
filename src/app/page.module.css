@@ -1,0 +1,50 @@
+.page {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+.content {
+  display: grid;
+  width: min(100%, 36rem);
+  justify-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.heading {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid currentcolor;
+  border-radius: 8px;
+  font-weight: 650;
+}
+
+.status::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: currentcolor;
+  content: "";
+}
+
+.status[data-foundation-status="connected"] {
+  color: var(--color-primary);
+  background: var(--color-connected-surface);
+}
+
+.status[data-foundation-status="foundation_unavailable"] {
+  color: var(--color-error);
+  background: var(--color-error-surface);
+}
