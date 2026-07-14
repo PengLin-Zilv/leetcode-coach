@@ -385,6 +385,70 @@ describe("recommendNext session fit and difficulty", () => {
     },
   );
 
+  it("prefers Medium directly over Hard for a reviewing user", () => {
+    const medium = problem({
+      id: "00000000-0000-7000-8000-000000000020",
+      patternId: patterns.arrays.id,
+      title: "Z Medium Exercise",
+      difficulty: "medium",
+      estimatedMinutes: 30,
+    });
+    const hard = problem({
+      id: "00000000-0000-7000-8000-000000000021",
+      patternId: patterns.arrays.id,
+      title: "A Hard Exercise",
+      difficulty: "hard",
+      estimatedMinutes: 45,
+    });
+
+    const result = recommended(
+      recommendNext({
+        ...newUserInput,
+        profile: { minutesPerSession: 60, startingLevel: "reviewing" },
+        patterns: [patterns.arrays],
+        prerequisites: [],
+        problems: [hard, medium],
+        skillStates: [state(patterns.arrays.id)],
+      }),
+    );
+
+    expect(result.problem.id).toBe(medium.id);
+  });
+
+  it("prefers Easy directly over Medium for a new user learning the pattern", () => {
+    const easy = problem({
+      id: "00000000-0000-7000-8000-000000000022",
+      patternId: patterns.arrays.id,
+      title: "Z Easy Exercise",
+      difficulty: "easy",
+      estimatedMinutes: 15,
+    });
+    const medium = problem({
+      id: "00000000-0000-7000-8000-000000000023",
+      patternId: patterns.arrays.id,
+      title: "A Medium Exercise",
+      difficulty: "medium",
+      estimatedMinutes: 30,
+    });
+
+    const result = recommended(
+      recommendNext({
+        ...newUserInput,
+        profile: { minutesPerSession: 60, startingLevel: "new" },
+        patterns: [patterns.arrays],
+        prerequisites: [],
+        problems: [medium, easy],
+        skillStates: [state(patterns.arrays.id, { mastery: "learning" })],
+      }),
+    );
+
+    expect(result.problem.id).toBe(easy.id);
+    expect(result.factors).toMatchObject({
+      kind: "continue_pattern",
+      mastery: "learning",
+    });
+  });
+
   it("targets Medium while continuing a practicing pattern", () => {
     const result = recommended(
       recommendNext({
@@ -435,7 +499,7 @@ describe("recommendNext stable tie breakers", () => {
     expect(result.problem.title).toBe("Valid Anagram");
   });
 
-  it("prefers the earlier last attempt before problem title", () => {
+  it("uses earlier last-attempt time after latest-session rank is tied", () => {
     const result = recommended(
       recommendNext({
         ...newUserInput,
@@ -449,6 +513,11 @@ describe("recommendNext stable tie breakers", () => {
             problems.containsDuplicate.id,
             "2026-07-11T12:00:00.000Z",
             "attempt-newer",
+          ),
+          attempt(
+            problems.hardArray.id,
+            "2026-07-12T12:00:00.000Z",
+            "attempt-unrelated-latest",
           ),
         ],
       }),
