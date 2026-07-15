@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import {
   attempts,
+  patterns,
   problemPatterns,
   problems,
   profiles,
@@ -124,11 +125,40 @@ export async function countSkillStatesScenario(): Promise<number> {
 
 export async function createLongContentScenario(): Promise<{
   problemId: string;
+  patternName: string;
+  reasonMinimumLength: number;
   title: string;
+  longNote: string;
 }> {
   await saveProfileScenario();
+  return mutateLongCatalogScenario();
+}
+
+export async function createLongCatalogScenario(): Promise<{
+  problemId: string;
+  patternName: string;
+  reasonMinimumLength: number;
+  title: string;
+  longNote: string;
+}> {
+  return mutateLongCatalogScenario();
+}
+
+async function mutateLongCatalogScenario(): Promise<{
+  problemId: string;
+  patternName: string;
+  reasonMinimumLength: number;
+  title: string;
+  longNote: string;
+}> {
   const connection = await openBrowserDatabase();
   const title = "Long interview problem title ".padEnd(100, "x");
+  const patternName = "Long prerequisite pattern name ".padEnd(100, "p");
+  const dependentPatternNames = [
+    "Long dependent two pointers pattern ".padEnd(100, "q"),
+    "Long dependent stack pattern ".padEnd(100, "r"),
+  ] as const;
+  const longNote = "Long independent evidence note. ".repeat(55);
 
   if (title.length !== 100) {
     throw new Error(
@@ -151,7 +181,45 @@ export async function createLongContentScenario(): Promise<{
       .set({ title })
       .where(eq(problems.id, problem.id));
 
-    return { problemId: problem.id, title };
+    for (const [currentName, longName] of [
+      ["Arrays & Hashing", patternName],
+      ["Two Pointers", dependentPatternNames[0]],
+      ["Stack", dependentPatternNames[1]],
+    ] as const) {
+      await connection.database
+        .update(patterns)
+        .set({ name: longName })
+        .where(eq(patterns.name, currentName));
+    }
+
+    return {
+      problemId: problem.id,
+      patternName,
+      reasonMinimumLength: title.length + patternName.length + 120,
+      title,
+      longNote,
+    };
+  } finally {
+    connection.close();
+  }
+}
+
+export async function setProfileWriteFailureScenario(
+  enabled: boolean,
+): Promise<void> {
+  const connection = await openBrowserDatabase();
+
+  try {
+    await connection.database.run(
+      sql.raw("DROP TRIGGER IF EXISTS e2e_profile_write_failure"),
+    );
+    if (enabled) {
+      await connection.database.run(
+        sql.raw(
+          "CREATE TRIGGER e2e_profile_write_failure BEFORE INSERT ON profiles BEGIN SELECT RAISE(ABORT, 'e2e profile write failure'); END",
+        ),
+      );
+    }
   } finally {
     connection.close();
   }

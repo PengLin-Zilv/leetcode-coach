@@ -66,11 +66,20 @@ test("an empty catalog keeps Today stable and retryable", async ({ page }) => {
 test("persisted Attempts self-heal missing MEMORY on Today and Progress", async ({
   page,
 }) => {
-  await createMissingMemoryScenario();
+  const scenario = await createMissingMemoryScenario();
   expect(await countSkillStatesScenario()).toBe(0);
 
   await page.goto("/today");
-  await expect(page.locator("h1#today-task")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Encode and Decode Strings" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Arrays & Hashing is due for review, and Encode and Decode Strings fits your 30-minute session.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  expect(scenario.problemTitle).toBe("Contains Duplicate");
   expect(await countSkillStatesScenario()).toBeGreaterThan(0);
 
   await deleteSkillStatesScenario();
@@ -111,24 +120,38 @@ test("long title, reason, and note preserve actions without clipping", async ({
   await expect(
     page.getByRole("heading", { name: scenario.title }),
   ).toBeVisible();
-  const reason = page.locator("main h2", { hasText: "Why this" }).locator("..");
-  expect((await reason.textContent())?.length).toBeGreaterThan(150);
   await expect(
-    page.getByRole("button", { name: "Start session" }),
+    page.getByText(scenario.patternName, { exact: true }),
   ).toBeVisible();
+  const reason = page
+    .locator("main h2", { hasText: "Why this" })
+    .locator("xpath=following-sibling::p[1]");
+  const reasonText = (await reason.textContent()) ?? "";
+  expect(reasonText.length).toBeGreaterThan(scenario.reasonMinimumLength);
+  expect(reasonText.replace(scenario.title, "").length).toBeGreaterThan(200);
+  const start = page.getByRole("button", { name: "Start session" });
+  await expectContainedAndSeparate(page, [
+    page.getByRole("heading", { name: scenario.title }),
+    page.getByText(scenario.patternName, { exact: true }),
+    reason,
+    start,
+  ]);
   await expectNoHorizontalOverflow(page);
 
-  await page.getByRole("button", { name: "Start session" }).click();
-  const longNote = "Invariant and edge-case note. ".repeat(60);
-  await page.getByLabel("Notes").fill(longNote);
-  await expect(page.getByRole("link", { name: "End attempt" })).toBeVisible();
+  await start.click();
+  await page.getByLabel("Notes").fill(scenario.longNote);
+  await expectContainedAndSeparate(page, [
+    page.getByLabel("Notes"),
+    page.getByRole("link", { name: "End attempt" }),
+  ]);
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("link", { name: "End attempt" }).click();
-  await expect(page.getByLabel("Optional note")).toHaveValue(longNote);
-  await expect(
+  await expect(page.getByLabel("Optional note")).toHaveValue(scenario.longNote);
+  await expectContainedAndSeparate(page, [
+    page.getByLabel("Optional note"),
     page.getByRole("button", { name: "Review this attempt" }),
-  ).toBeVisible();
+  ]);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -136,6 +159,12 @@ test("unknown Problem and Attempt IDs show the product not-found state", async (
   page,
 }) => {
   await saveProfileScenario();
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
 
   for (const route of [
     `/practice/${UNKNOWN_PROBLEM_ID}`,
@@ -149,8 +178,46 @@ test("unknown Problem and Attempt IDs show the product not-found state", async (
       }),
     ).toBeVisible();
     await expect(page.getByText(/raw|stack|error:/i)).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Go to Today" })).toBeVisible();
   }
+  expect(pageErrors).toEqual([]);
+  expect(
+    consoleErrors.filter((message) => /SQL|stack|Error:/i.test(message)),
+  ).toEqual([]);
+  expect(
+    consoleErrors.every((message) => /404 \(Not Found\)/.test(message)),
+  ).toBe(true);
 });
+
+async function expectContainedAndSeparate(
+  page: import("@playwright/test").Page,
+  locators: readonly import("@playwright/test").Locator[],
+) {
+  for (const locator of locators) {
+    await locator.scrollIntoViewIfNeeded();
+    const box = await locator.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(
+      await page.evaluate(() => document.documentElement.clientWidth),
+    );
+  }
+
+  for (let first = 0; first < locators.length; first += 1) {
+    for (let second = first + 1; second < locators.length; second += 1) {
+      const [a, b] = await Promise.all([
+        locators[first].boundingBox(),
+        locators[second].boundingBox(),
+      ]);
+      const overlaps =
+        a!.x < b!.x + b!.width &&
+        a!.x + a!.width > b!.x &&
+        a!.y < b!.y + b!.height &&
+        a!.y + a!.height > b!.y;
+      expect(overlaps).toBe(false);
+    }
+  }
+}
 
 async function expectNoHorizontalOverflow(
   page: import("@playwright/test").Page,

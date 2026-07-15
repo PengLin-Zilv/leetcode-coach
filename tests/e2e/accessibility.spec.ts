@@ -1,7 +1,13 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
-import { saveProfileScenario } from "./support/scenarios";
+import { resetBrowserDatabase } from "./support/database";
+import {
+  clearProblemCatalogScenario,
+  saveProfileScenario,
+  setProfileWriteFailureScenario,
+  UNKNOWN_PROBLEM_ID,
+} from "./support/scenarios";
 
 test("pages expose one h1 and labelled primary navigation with current state", async ({
   page,
@@ -149,6 +155,132 @@ test("Reflection validation announces the error and focuses the first invalid re
   await expect(page.getByLabel("Solved", { exact: true })).toBeFocused();
 });
 
+test("Setup announces server field errors and focuses the first invalid field", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+  await fillSetup(page);
+  await page
+    .getByLabel("Interview date")
+    .evaluate((input: HTMLInputElement) => {
+      input.value = "";
+    });
+
+  await page.getByRole("button", { name: "Build my first session" }).click();
+
+  const alert = page.getByRole("alert").filter({ hasText: /date/i });
+  await expect(alert).toBeVisible();
+  await expect(page.getByLabel("Interview date")).toBeFocused();
+  await expectNoRawFailureCopy(page);
+});
+
+test("Setup announces a safe save failure and focuses the general error", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+  await fillSetup(page);
+  await setProfileWriteFailureScenario(true);
+
+  try {
+    await page.getByRole("button", { name: "Build my first session" }).click();
+    const alert = page.getByRole("alert").filter({
+      hasText: "Your setup could not be saved. Try again.",
+    });
+    await expect(alert).toBeVisible();
+    await expect(alert).toBeFocused();
+    await expectNoRawFailureCopy(page);
+  } finally {
+    await setProfileWriteFailureScenario(false);
+  }
+});
+
+test("Reflection announces an expired session safely and focuses the form error", async ({
+  page,
+}) => {
+  await saveProfileScenario();
+  await page.goto("/today");
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("link", { name: "End attempt" }).click();
+  await page.context().clearCookies();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+
+  const alert = page.getByRole("alert").filter({
+    hasText: "This practice session is no longer active. Start from Today.",
+  });
+  await expect(alert).toBeVisible();
+  await expect(alert).toBeFocused();
+  await expectNoRawFailureCopy(page);
+});
+
+test("Reflection announces a safe note error and focuses the invalid note", async ({
+  page,
+}) => {
+  await saveProfileScenario();
+  await page.goto("/today");
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByLabel("Notes").fill("x".repeat(2_001));
+  await page.getByRole("link", { name: "End attempt" }).click();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+
+  const alert = page.getByRole("alert").filter({
+    hasText: "Keep your note to 2,000 characters or fewer.",
+  });
+  await expect(alert).toBeVisible();
+  await expect(page.getByLabel("Optional note")).toBeFocused();
+  await expectNoRawFailureCopy(page);
+});
+
+test("focus styling covers Feedback, Progress, mobile coaching, retry, and not-found actions", async ({
+  page,
+}) => {
+  await saveProfileScenario();
+  await page.goto("/today");
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("link", { name: "End attempt" }).click();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+  await expectKeyboardFocus(page, [
+    page.getByRole("link", { name: "Finish" }),
+    page.getByRole("link", { name: "View progress" }),
+  ]);
+
+  await page.getByRole("link", { name: "View progress" }).click();
+  await expectKeyboardFocus(page, [
+    page.getByRole("link", { name: "Today" }),
+    page.getByRole("link", { name: "Progress" }),
+  ]);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/today");
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("button", { name: "Open coaching" }).click();
+  const sheet = page.getByRole("dialog", { name: "MIND" });
+  await expectKeyboardFocus(page, [
+    sheet.getByRole("button", { name: "Close coaching" }),
+    sheet.getByRole("link", { name: "End attempt" }),
+    sheet.getByRole("button", { name: "Give me a hint" }),
+    sheet.getByRole("button", { name: "Simpler" }),
+    sheet.getByRole("button", { name: "Example" }),
+    sheet.getByRole("button", { name: "Trace it" }),
+  ]);
+
+  await resetBrowserDatabase();
+  await page.context().clearCookies();
+  await saveProfileScenario();
+  await clearProblemCatalogScenario();
+  await page.goto("/today");
+  await expectKeyboardFocus(page, [
+    page.getByRole("button", { name: "Retry recommendation" }),
+  ]);
+
+  await page.goto(`/practice/${UNKNOWN_PROBLEM_ID}`);
+  await expectKeyboardFocus(page, [
+    page.getByRole("link", { name: "Go to Today" }),
+  ]);
+});
+
 test("timer, unavailable status, and external-link copy announce honest semantics", async ({
   page,
 }) => {
@@ -217,11 +349,19 @@ test("reduced-motion preference removes nonessential motion globally", async ({
 });
 
 async function completeSetup(page: Page) {
+  await fillSetup(page);
+  await page.getByRole("button", { name: "Build my first session" }).click();
+}
+
+async function fillSetup(page: Page) {
   await page.getByLabel("Interview date").fill("2099-08-31");
   await page.getByLabel("Sessions each week").selectOption("4");
   await page.getByLabel("Minutes per session").selectOption("30");
   await page.getByLabel("Starting point").selectOption("new");
-  await page.getByRole("button", { name: "Build my first session" }).click();
+}
+
+async function expectNoRawFailureCopy(page: Page) {
+  await expect(page.getByText(/SQL|stack|Error:/i)).toHaveCount(0);
 }
 
 async function tabTo(page: Page, target: Locator) {

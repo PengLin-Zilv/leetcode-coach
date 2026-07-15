@@ -33,6 +33,8 @@ export function AttemptReflectionForm({
   const [state, action] = useActionState(submit, INITIAL_STATE);
   const noteRef = useRef<HTMLTextAreaElement>(null);
   const firstResultRef = useRef<HTMLInputElement>(null);
+  const confidenceRef = useRef<HTMLSelectElement>(null);
+  const formErrorRef = useRef<HTMLParagraphElement>(null);
   const storageKey = practiceDraftStorageKey(problemId, startedAt);
 
   useEffect(() => {
@@ -42,10 +44,15 @@ export function AttemptReflectionForm({
   }, [storageKey]);
 
   useEffect(() => {
-    if (state.fieldErrors?.result?.[0]) {
-      firstResultRef.current?.focus();
-    }
-  }, [state.fieldErrors?.result]);
+    const firstInvalid = state.fieldErrors?.result?.[0]
+      ? firstResultRef.current
+      : state.fieldErrors?.confidence?.[0]
+        ? confidenceRef.current
+        : state.fieldErrors?.note?.[0]
+          ? noteRef.current
+          : null;
+    (firstInvalid ?? (state.formError ? formErrorRef.current : null))?.focus();
+  }, [state]);
 
   return (
     <main className={styles.page}>
@@ -90,7 +97,16 @@ export function AttemptReflectionForm({
 
           <div className={styles.field}>
             <label htmlFor="confidence">Confidence</label>
-            <select defaultValue="" id="confidence" name="confidence">
+            <select
+              aria-describedby={
+                state.fieldErrors?.confidence ? "confidence-error" : undefined
+              }
+              aria-invalid={Boolean(state.fieldErrors?.confidence)}
+              defaultValue=""
+              id="confidence"
+              name="confidence"
+              ref={confidenceRef}
+            >
               <option value="">Optional</option>
               {[1, 2, 3, 4, 5].map((value) => (
                 <option key={value} value={value}>
@@ -98,12 +114,19 @@ export function AttemptReflectionForm({
                 </option>
               ))}
             </select>
-            <FieldError messages={state.fieldErrors?.confidence} />
+            <FieldError
+              id="confidence-error"
+              messages={state.fieldErrors?.confidence}
+            />
           </div>
 
           <div className={styles.field}>
             <label htmlFor="attempt-note">Optional note</label>
             <textarea
+              aria-describedby={
+                state.fieldErrors?.note ? "attempt-note-error" : undefined
+              }
+              aria-invalid={Boolean(state.fieldErrors?.note)}
               defaultValue=""
               id="attempt-note"
               maxLength={2_000}
@@ -114,11 +137,19 @@ export function AttemptReflectionForm({
               placeholder="What approach or invariant did you use?"
               ref={noteRef}
             />
-            <FieldError messages={state.fieldErrors?.note} />
+            <FieldError
+              id="attempt-note-error"
+              messages={state.fieldErrors?.note}
+            />
           </div>
 
           {state.formError ? (
-            <p className={styles.formError} role="alert">
+            <p
+              className={styles.formError}
+              ref={formErrorRef}
+              role="alert"
+              tabIndex={-1}
+            >
               {state.formError}
             </p>
           ) : null}

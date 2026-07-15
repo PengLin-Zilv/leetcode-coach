@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import {
   saveProfileAction,
@@ -34,7 +34,25 @@ export function SetupForm({
 }>) {
   const [state, action] = useActionState(saveProfileAction, INITIAL_STATE);
   const [values, setValues] = useState(defaultValues);
+  const deadlineRef = useRef<HTMLInputElement>(null);
+  const sessionsPerWeekRef = useRef<HTMLSelectElement>(null);
+  const minutesPerSessionRef = useRef<HTMLSelectElement>(null);
+  const startingLevelRef = useRef<HTMLSelectElement>(null);
+  const formErrorRef = useRef<HTMLParagraphElement>(null);
   const isComplete = Object.values(values).every((value) => value !== "");
+
+  useEffect(() => {
+    const firstInvalid = state.fieldErrors?.deadline
+      ? deadlineRef.current
+      : state.fieldErrors?.sessionsPerWeek
+        ? sessionsPerWeekRef.current
+        : state.fieldErrors?.minutesPerSession
+          ? minutesPerSessionRef.current
+          : state.fieldErrors?.startingLevel
+            ? startingLevelRef.current
+            : null;
+    (firstInvalid ?? (state.formError ? formErrorRef.current : null))?.focus();
+  }, [state]);
 
   function updateValue(field: keyof SetupValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -57,7 +75,7 @@ export function SetupForm({
           </p>
         ) : null}
 
-        <form action={action} className={styles.form}>
+        <form action={action} className={styles.form} noValidate>
           <div className={styles.field}>
             <label htmlFor="deadline">Interview date</label>
             <input
@@ -69,6 +87,7 @@ export function SetupForm({
               name="deadline"
               onChange={(event) => updateValue("deadline", event.target.value)}
               required
+              ref={deadlineRef}
               type="date"
               value={values.deadline}
             />
@@ -93,6 +112,7 @@ export function SetupForm({
                 updateValue("sessionsPerWeek", event.target.value)
               }
               required
+              ref={sessionsPerWeekRef}
               value={values.sessionsPerWeek}
             >
               <option disabled value="">
@@ -125,6 +145,7 @@ export function SetupForm({
                 updateValue("minutesPerSession", event.target.value)
               }
               required
+              ref={minutesPerSessionRef}
               value={values.minutesPerSession}
             >
               <option disabled value="">
@@ -157,6 +178,7 @@ export function SetupForm({
                 updateValue("startingLevel", event.target.value)
               }
               required
+              ref={startingLevelRef}
               value={values.startingLevel}
             >
               <option disabled value="">
@@ -173,7 +195,12 @@ export function SetupForm({
           </div>
 
           {state.formError ? (
-            <p className={styles.formError} role="alert">
+            <p
+              className={styles.formError}
+              ref={formErrorRef}
+              role="alert"
+              tabIndex={-1}
+            >
               {state.formError}
             </p>
           ) : null}
@@ -192,7 +219,7 @@ function FieldError({
   messages,
 }: Readonly<{ id: string; messages?: readonly string[] }>) {
   return messages?.[0] ? (
-    <span className={styles.fieldError} id={id}>
+    <span className={styles.fieldError} id={id} role="alert">
       {messages[0]}
     </span>
   ) : null;

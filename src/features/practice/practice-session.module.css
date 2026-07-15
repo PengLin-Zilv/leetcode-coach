@@ -37,6 +37,7 @@
 .openMindButton:focus-visible,
 .hintButton:focus-visible,
 .closeMindButton:focus-visible,
+.mindEndAction:focus-visible,
 .presentationControls button:focus-visible,
 .notes:focus-visible {
   outline: var(--focus-ring);

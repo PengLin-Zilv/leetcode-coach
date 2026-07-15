@@ -28,12 +28,23 @@ const reflectionFormSchema = z
     }),
     confidence: z.preprocess(
       (value) => (value === "" ? undefined : value),
-      z.enum(["1", "2", "3", "4", "5"]).optional(),
+      z
+        .enum(["1", "2", "3", "4", "5"], {
+          error: "Choose confidence from 1 to 5 or leave it blank.",
+        })
+        .optional(),
     ),
     note: z.preprocess(
       (value) =>
         typeof value === "string" && value.trim() === "" ? undefined : value,
-      z.string().trim().min(1).max(2_000).optional(),
+      z
+        .string()
+        .trim()
+        .min(1, { error: "Add a note or leave the field blank." })
+        .max(2_000, {
+          error: "Keep your note to 2,000 characters or fewer.",
+        })
+        .optional(),
     ),
   })
   .strict();
