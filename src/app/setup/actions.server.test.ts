@@ -40,18 +40,28 @@ describe("saveProfileAction", () => {
     mocks.saveProfile.mockReset();
   });
 
-  it("returns field errors without echoing unexpected form input", async () => {
-    const formData = validProfileForm();
-    formData.set("deadline", "not-a-date");
-    formData.set("unexpected", "private-unexpected-value");
+  it.each([
+    ["deadline", "not-a-date", "Enter a valid interview date."],
+    ["sessionsPerWeek", "many", "Choose 1 to 7 sessions per week."],
+    ["minutesPerSession", "20", "Choose 15, 30, 45, or 60 minutes."],
+    ["startingLevel", "expert", "Choose your starting point."],
+  ] as const)(
+    "maps invalid %s input to deterministic product copy without echoing it",
+    async (field, invalidValue, expectedMessage) => {
+      const formData = validProfileForm();
+      formData.set(field, invalidValue);
+      formData.set("unexpected", "private-unexpected-value");
 
-    const result = await saveProfileAction({}, formData);
+      const result = await saveProfileAction({}, formData);
 
-    expect(result.fieldErrors?.deadline).toBeDefined();
-    expect(JSON.stringify(result)).not.toContain("private-unexpected-value");
-    expect(mocks.getProfile).not.toHaveBeenCalled();
-    expect(mocks.saveProfile).not.toHaveBeenCalled();
-  });
+      expect(result.fieldErrors).toEqual({ [field]: [expectedMessage] });
+      expect(JSON.stringify(result)).not.toMatch(
+        /not-a-date|many|20|expert|private-unexpected-value|invalid|expected|received|ISO|number|enum|literal|union/i,
+      );
+      expect(mocks.getProfile).not.toHaveBeenCalled();
+      expect(mocks.saveProfile).not.toHaveBeenCalled();
+    },
+  );
 
   it("updates the singleton Profile without generating or replacing its ID", async () => {
     const existingProfile = {

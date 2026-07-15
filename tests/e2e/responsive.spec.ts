@@ -90,6 +90,9 @@ for (const viewport of viewports) {
     await expectScreen(page, page.getByRole("link", { name: "Finish" }));
     await page.getByRole("link", { name: "View progress" }).click();
     await expectScreen(page, page.getByRole("link", { name: "Today" }));
+    if (viewport.width === 1440) {
+      await expectStatusLabelsUnbroken(page);
+    }
     await page.getByRole("link", { name: "Today" }).click();
     await expectScreen(
       page,
@@ -153,6 +156,9 @@ test("captures the five workflow views at desktop, mobile, and 320px", async ({
       page.getByRole("heading", { name: "Evidence from your practice" }),
     ).toBeVisible();
     await expectScreen(page, page.getByRole("link", { name: "Today" }));
+    if (viewport.width === 1440) {
+      await expectStatusLabelsUnbroken(page);
+    }
     await screenshot("progress");
   }
 });
@@ -269,6 +275,20 @@ async function expectContentContainedAndSeparate(page: Page) {
       return failures;
     });
   expect(failures).toEqual([]);
+}
+
+async function expectStatusLabelsUnbroken(page: Page) {
+  const wrapped = await page.locator("[data-state]").evaluateAll((labels) =>
+    labels.flatMap((label) => {
+      const text = label.textContent?.trim() ?? "";
+      const textNode = label.firstChild;
+      if (text === "" || textNode === null) return [];
+      const range = document.createRange();
+      range.selectNodeContents(textNode);
+      return range.getClientRects().length > 1 ? [text] : [];
+    }),
+  );
+  expect(wrapped).toEqual([]);
 }
 
 async function fillSetup(page: Page) {

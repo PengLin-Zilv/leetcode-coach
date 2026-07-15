@@ -155,21 +155,36 @@ test("Reflection validation announces the error and focuses the first invalid re
   await expect(page.getByLabel("Solved", { exact: true })).toBeFocused();
 });
 
-test("Setup announces server field errors and focuses the first invalid field", async ({
+test("Setup announces safe field errors and focuses the first invalid field", async ({
   page,
 }) => {
   await page.goto("/setup");
   await fillSetup(page);
-  await page
-    .getByLabel("Interview date")
-    .evaluate((input: HTMLInputElement) => {
-      input.value = "";
-    });
+  for (const label of [
+    "Interview date",
+    "Sessions each week",
+    "Minutes per session",
+    "Starting point",
+  ]) {
+    await page
+      .getByLabel(label)
+      .evaluate((control: HTMLInputElement | HTMLSelectElement) => {
+        control.value = "";
+      });
+  }
 
   await page.getByRole("button", { name: "Build my first session" }).click();
 
-  const alert = page.getByRole("alert").filter({ hasText: /date/i });
-  await expect(alert).toBeVisible();
+  for (const message of [
+    "Enter a valid interview date.",
+    "Choose 1 to 7 sessions per week.",
+    "Choose 15, 30, 45, or 60 minutes.",
+    "Choose your starting point.",
+  ]) {
+    await expect(
+      page.getByRole("alert").filter({ hasText: message }),
+    ).toBeVisible();
+  }
   await expect(page.getByLabel("Interview date")).toBeFocused();
   await expectNoRawFailureCopy(page);
 });
@@ -361,7 +376,11 @@ async function fillSetup(page: Page) {
 }
 
 async function expectNoRawFailureCopy(page: Page) {
-  await expect(page.getByText(/SQL|stack|Error:/i)).toHaveCount(0);
+  await expect(
+    page.getByText(
+      /SQL|stack|Error:|Invalid ISO|expected (?:string|number|union|literal)|invalid (?:type|enum|value)/i,
+    ),
+  ).toHaveCount(0);
 }
 
 async function tabTo(page: Page, target: Locator) {

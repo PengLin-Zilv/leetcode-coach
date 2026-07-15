@@ -17,6 +17,13 @@ export type SaveProfileActionState = Readonly<{
   formError?: string;
 }>;
 
+const PROFILE_FIELD_ERROR_MESSAGES = {
+  deadline: "Enter a valid interview date.",
+  sessionsPerWeek: "Choose 1 to 7 sessions per week.",
+  minutesPerSession: "Choose 15, 30, 45, or 60 minutes.",
+  startingLevel: "Choose your starting point.",
+} as const satisfies Record<keyof ProfileInput, string>;
+
 export async function saveProfileAction(
   _state: SaveProfileActionState,
   formData: FormData,
@@ -29,7 +36,19 @@ export async function saveProfileAction(
   });
 
   if (!parsed.success) {
-    return { fieldErrors: parsed.error.flatten().fieldErrors };
+    const validationErrors = parsed.error.flatten().fieldErrors;
+    const fieldErrors: Partial<Record<keyof ProfileInput, readonly string[]>> =
+      {};
+
+    for (const field of Object.keys(PROFILE_FIELD_ERROR_MESSAGES) as Array<
+      keyof ProfileInput
+    >) {
+      if (validationErrors[field]?.length) {
+        fieldErrors[field] = [PROFILE_FIELD_ERROR_MESSAGES[field]];
+      }
+    }
+
+    return { fieldErrors };
   }
 
   const repository = getTrainingRepository();

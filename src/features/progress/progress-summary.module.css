@@ -175,6 +175,32 @@
   border: 0;
 }
 
+@media (min-width: 641px) {
+  .evidenceTable {
+    table-layout: fixed;
+  }
+
+  .evidenceTable :is(th, td):nth-child(1) {
+    width: 50%;
+  }
+
+  .evidenceTable :is(th, td):nth-child(2) {
+    width: 14%;
+  }
+
+  .evidenceTable :is(th, td):nth-child(3) {
+    width: 21%;
+  }
+
+  .evidenceTable :is(th, td):nth-child(4) {
+    width: 15%;
+  }
+
+  .state {
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 640px) {
   .page {
     padding-top: 24px;
