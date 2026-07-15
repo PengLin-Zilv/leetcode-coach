@@ -1309,7 +1309,7 @@ git commit -m "feat(mind): add a validated unavailable coaching seam"
 - Consumes: the server-only `TrainingRepository` and `getTodayRecommendation()`.
 - Produces: profile-aware root routing, validated Setup action, one-primary-task Today screen, and a fresh migrated/seeded local browser database for every spec.
 
-- [ ] **Step 1: Guard and configure the browser database**
+- [x] **Step 1: Guard and configure the browser database**
 
 `scripts/prepare-e2e.ts` and `tests/e2e/support/database.ts` must refuse any URL that is remote, equals `file:./dev.db`, or is outside `file:./test-results/`. They migrate, clear rows in FK-safe order, and reuse `seedCatalog`; they never expose a reset HTTP route.
 
@@ -1349,7 +1349,7 @@ Add exact package scripts:
 The automatic fixture resets Profile, Attempts, Reflections, MIND Outputs, and
 Skill State before each test, then reseeds 18/150.
 
-- [ ] **Step 2: Write the failing Setup→Today browser test**
+- [x] **Step 2: Write the failing Setup→Today browser test**
 
 Assert a blank profile routes `/` to `/setup`, then:
 
@@ -1369,7 +1369,7 @@ await expect(page.getByText(/fits your 30-minute session/i)).toBeVisible();
 
 Reload and assert Setup does not reappear and the same recommendation/reason persists.
 
-- [ ] **Step 3: Run the browser test and verify RED**
+- [x] **Step 3: Run the browser test and verify RED**
 
 Run:
 
@@ -1379,7 +1379,7 @@ npm run test:e2e -- tests/e2e/setup-today.spec.ts
 
 Expected: FAIL because Setup/Today routes do not exist.
 
-- [ ] **Step 4: Implement validated Setup and profile-aware routing**
+- [x] **Step 4: Implement validated Setup and profile-aware routing**
 
 `saveProfileAction(formData)` parses plain values with `profileInputSchema`, returns field-level errors without echoing unexpected input, creates a UUIDv7 only when no singleton Profile exists, upserts by `singleton_key`, revalidates `/`/`/today`/`/progress`, then redirects `/today`.
 
@@ -1388,7 +1388,7 @@ Every action module begins with `"use server";` followed by
 `import "server-only";`. `PrimaryNav` is the narrow Client Component that reads the
 current pathname and supplies `aria-current="page"`.
 
-- [ ] **Step 5: Implement the thin Today read model**
+- [x] **Step 5: Implement the thin Today read model**
 
 Call `getTodayRecommendation` from a dynamic Node.js Server Component. Render one heading/problem, Pattern, difficulty, target time, exact reason, external-free Start form, deadline context, and optional due-review count. Render no task grid, Account/avatar, fake metrics, or MIND copy.
 
@@ -1397,7 +1397,7 @@ An expected `catalog_empty` or `no_session_fit` result renders the stable Today
 layout with concise deterministic copy and a Retry action; it must not throw merely
 to reach `error.tsx`.
 
-- [ ] **Step 6: Run RED to GREEN and current checks**
+- [x] **Step 6: Run RED to GREEN and current checks**
 
 Run:
 
@@ -1411,7 +1411,7 @@ npm run build
 
 Expected: all exit 0; browser data lives only under ignored `test-results`.
 
-- [ ] **Step 7: Commit Setup and one-task Today**
+- [x] **Step 7: Commit Setup and one-task Today**
 
 ```bash
 git add package.json playwright.config.ts scripts/prepare-e2e.ts src/app src/components src/features/setup src/features/today tests/e2e
@@ -1438,7 +1438,7 @@ git commit -m "feat(workflow): turn setup into one recommended task"
 - Consumes: current recommendation, catalog Problem, typed `MindGateway`, and untrusted active-practice cookie/local draft state.
 - Produces: `startPracticeAction`, `requestHintAction`, `ActivePractice` cookie state, locally autosaved notes, quiet timer, external LeetCode link, and honest MIND-unavailable behavior.
 
-- [ ] **Step 1: Write failing active-practice reducer tests**
+- [x] **Step 1: Write failing active-practice reducer tests**
 
 Use an injected clock and assert:
 
@@ -1467,7 +1467,7 @@ expect(() =>
 
 Also reject malformed/extra cookie fields, invalid UUIDs, route/cookie Problem mismatch, start times in the future, and levels outside 0–4.
 
-- [ ] **Step 2: Run the reducer test and verify RED**
+- [x] **Step 2: Run the reducer test and verify RED**
 
 Run:
 
@@ -1477,7 +1477,7 @@ npm test -- src/features/practice/active-practice.test.ts
 
 Expected: FAIL because active-practice state does not exist.
 
-- [ ] **Step 3: Implement validated transient practice state**
+- [x] **Step 3: Implement validated transient practice state**
 
 Store only:
 
@@ -1496,7 +1496,7 @@ deterministic Today recommendation or one of Progress's currently due-review
 Problems. It then sets a fresh cookie at server time and redirects to
 `/practice/[problemId]`. It creates no Attempt.
 
-- [ ] **Step 4: Write the failing Practice browser test**
+- [x] **Step 4: Write the failing Practice browser test**
 
 After Setup, start the recommended task and assert:
 
@@ -1507,7 +1507,7 @@ After Setup, start the recommended task and assert:
 - `Simpler`, `Example`, and `Trace it` remain usable presentation controls but never claim a deeper hint.
 - The timer is visible, has no assertive live region, and does not disable completion.
 
-- [ ] **Step 5: Run the browser test and verify RED**
+- [x] **Step 5: Run the browser test and verify RED**
 
 Run:
 
@@ -1517,7 +1517,7 @@ npm run test:e2e -- tests/e2e/practice.spec.ts
 
 Expected: FAIL because Practice routes/components do not exist.
 
-- [ ] **Step 6: Implement Practice and honest MIND failure**
+- [x] **Step 6: Implement Practice and honest MIND failure**
 
 `requestHintAction` validates the route ID and active cookie, calls only `UnavailableMindGateway` at runtime, and returns:
 
@@ -1531,7 +1531,7 @@ Only the `hint` branch may advance and rewrite the HTTP-only cookie, and only by
 
 The Client Component stores notes at `leetcode-coach:practice:<problemId>:<startedAt>` and restores them after reload. Use a stable desktop 60/40 layout; below the mobile breakpoint, open MIND as a full-height labelled sheet while keeping End attempt reachable.
 
-- [ ] **Step 7: Run RED to GREEN and current checks**
+- [x] **Step 7: Run RED to GREEN and current checks**
 
 Run:
 
@@ -1546,7 +1546,7 @@ npm run build
 
 Expected: all exit 0; browser completion works while MIND is unavailable.
 
-- [ ] **Step 8: Commit the focused Practice experience**
+- [x] **Step 8: Commit the focused Practice experience**
 
 ```bash
 git add src/app/practice src/features/practice src/features/today/today-recommendation.tsx tests/e2e/practice.spec.ts
@@ -1574,7 +1574,7 @@ git commit -m "feat(practice): preserve work while coaching is unavailable"
 - Consumes: active-practice cookie, local note draft, `completeAttempt`, optional validated per-Attempt MIND feedback, and current/recomputed Skill State.
 - Produces: a sub-30-second structured Attempt form, persisted event, honest feedback, review cue, before/after MEMORY delta, and Finish→Today.
 
-- [ ] **Step 1: Write the failing complete-loop browser test**
+- [x] **Step 1: Write the failing complete-loop browser test**
 
 Execute:
 
@@ -1603,7 +1603,7 @@ await expect(
 
 Reload Feedback and assert the Attempt/MEMORY delta remains identical. Finish and assert next Today shows a different problem and a reason matching its displayed factors.
 
-- [ ] **Step 2: Run the loop test and verify RED**
+- [x] **Step 2: Run the loop test and verify RED**
 
 Run:
 
@@ -1613,7 +1613,7 @@ npm run test:e2e -- tests/e2e/adaptive-loop.spec.ts
 
 Expected: FAIL because Reflection/Feedback routes do not exist.
 
-- [ ] **Step 3: Implement the structured Attempt Reflection screen**
+- [x] **Step 3: Implement the structured Attempt Reflection screen**
 
 Render only:
 
@@ -1639,7 +1639,7 @@ body. Explain that `solved` is independent only when the server-owned
 7. Clear the HTTP-only cookie only after Attempt commit.
 8. Redirect to `/feedback/[attemptId]` even when MEMORY is stale or MIND is unavailable.
 
-- [ ] **Step 4: Implement reload-safe Feedback**
+- [x] **Step 4: Implement reload-safe Feedback**
 
 `getFeedback` loads the persisted Attempt and derives:
 
@@ -1661,7 +1661,7 @@ Attempt, MEMORY is stale when its row is missing or
 Feedback renders primary `Finish` → Today and secondary `View progress` links so the
 required browser sequence does not depend on back navigation.
 
-- [ ] **Step 5: Run RED to GREEN and current checks**
+- [x] **Step 5: Run RED to GREEN and current checks**
 
 Run:
 
@@ -1675,7 +1675,7 @@ npm run build
 
 Expected: all exit 0; reload retains Attempt/Feedback/MEMORY and next Today changes.
 
-- [ ] **Step 6: Commit event completion and Feedback**
+- [x] **Step 6: Commit event completion and Feedback**
 
 ```bash
 git add src/app/practice src/app/feedback src/features/attempt src/features/feedback src/features/practice/clear-practice-draft.tsx tests/e2e/adaptive-loop.spec.ts
@@ -1698,7 +1698,7 @@ git commit -m "feat(feedback): show the persisted memory change"
 - Consumes: Profile, all Patterns/prerequisites, Attempts, refreshed Skill States, and injected current UTC date.
 - Produces: Profile/session summary, roadmap path, full-width evidence rows, reliable/learning/practicing/unseen labels, and due-review actions without percentages.
 
-- [ ] **Step 1: Extend the failing browser loop through Progress**
+- [x] **Step 1: Extend the failing browser loop through Progress**
 
 After Feedback:
 
@@ -1721,7 +1721,7 @@ await expect(page.getByText(/Contains Duplicate/)).not.toBeVisible();
 
 Also use a seeded due-review scenario to assert the due section and its Practice action appear; omit the entire section when nothing is due.
 
-- [ ] **Step 2: Run the extended browser test and verify RED**
+- [x] **Step 2: Run the extended browser test and verify RED**
 
 Run:
 
@@ -1731,7 +1731,7 @@ npm run test:e2e -- tests/e2e/adaptive-loop.spec.ts
 
 Expected: FAIL because Progress does not exist.
 
-- [ ] **Step 3: Implement the Progress read model and view**
+- [x] **Step 3: Implement the Progress read model and view**
 
 Refresh MEMORY from Attempts before reading. Return:
 
@@ -1762,7 +1762,7 @@ Evidence copy must be generated from real Attempt counts (“1 independent solve
 title/UUID for deterministic ties. The same due list authorizes Progress's Practice
 actions on the server.
 
-- [ ] **Step 4: Run RED to GREEN and current checks**
+- [x] **Step 4: Run RED to GREEN and current checks**
 
 Run:
 
@@ -1776,7 +1776,7 @@ npm run build
 
 Expected: all exit 0; reload preserves Profile, Attempt, and Progress.
 
-- [ ] **Step 5: Commit explainable Progress**
+- [x] **Step 5: Commit explainable Progress**
 
 ```bash
 git add src/app/\(primary\)/progress src/features/progress src/components/app-shell.tsx tests/e2e/adaptive-loop.spec.ts
@@ -1806,7 +1806,7 @@ git commit -m "feat(progress): expose evidence and due reviews"
 - Consumes: isolated database scenarios and the complete browser workflow.
 - Produces: observable proof for required non-happy states, desktop/mobile/320px layout, keyboard focus, and reduced motion.
 
-- [ ] **Step 1: Write failing state coverage**
+- [x] **Step 1: Write failing state coverage**
 
 `states.spec.ts` must prepare scenarios through direct guarded test-database helpers—not production routes—and cover:
 
@@ -1819,7 +1819,7 @@ git commit -m "feat(progress): expose evidence and due reviews"
 - a 100-character title, long recommendation reason, and long note do not clip actions;
 - unknown Problem/Attempt IDs render the product not-found state without raw errors.
 
-- [ ] **Step 2: Write failing responsive coverage**
+- [x] **Step 2: Write failing responsive coverage**
 
 At viewports 1440×900, 768×1024, 390×844, and 320×700:
 
@@ -1833,7 +1833,7 @@ expect(overflow).toBeLessThanOrEqual(0);
 
 Assert the Practice desktop layout is approximately 60/40, mobile MIND is a full-height sheet, all primary actions are visible, no bounding boxes overlap, and every interactive target is at least 44×44 CSS pixels. Complete the primary flow at 320px.
 
-- [ ] **Step 3: Write failing keyboard/reduced-motion coverage**
+- [x] **Step 3: Write failing keyboard/reduced-motion coverage**
 
 Prove:
 
@@ -1846,7 +1846,7 @@ Prove:
 - mobile sheet Escape closes and returns focus;
 - `prefers-reduced-motion: reduce` disables nonessential transitions/animation.
 
-- [ ] **Step 4: Run the browser suites and verify RED**
+- [x] **Step 4: Run the browser suites and verify RED**
 
 Run:
 
@@ -1856,7 +1856,7 @@ npm run test:e2e -- tests/e2e/states.spec.ts tests/e2e/responsive.spec.ts tests/
 
 Expected: at least one assertion fails before the state/accessibility/layout hardening.
 
-- [ ] **Step 5: Implement only fixes demanded by the tests**
+- [x] **Step 5: Implement only fixes demanded by the tests**
 
 Extend shared tokens for focus ring, borders, muted/review surfaces, stable control heights, and spacing. Add no gradients, decorative art, nested cards, radius above 8px, or new styling dependency. Keep mobile content order Practice first, MIND second/sheet.
 
@@ -1866,11 +1866,11 @@ column at the mobile breakpoint, and an explicit
 `@media (prefers-reduced-motion: reduce)` rule that removes nonessential
 transitions/animations.
 
-- [ ] **Step 6: Inspect real screenshots**
+- [x] **Step 6: Inspect real screenshots**
 
 Run the app through Playwright and capture Today, Practice, Reflection, Feedback, and Progress at 1440px, 390px, and 320px. Inspect every image for overlap, clipping, horizontal scrolling, hidden actions, unstable height, weak focus/status contrast, and long-text breakage. Record only actionable findings and correct them before proceeding.
 
-- [ ] **Step 7: Run RED to GREEN and the entire browser suite**
+- [x] **Step 7: Run RED to GREEN and the entire browser suite**
 
 Run:
 
@@ -1884,7 +1884,7 @@ npm run build
 
 Expected: all browser cases and current checks exit 0.
 
-- [ ] **Step 8: Commit UI hardening**
+- [x] **Step 8: Commit UI hardening**
 
 ```bash
 git add tests/e2e src/app/globals.css src/styles/tokens.css src/features
@@ -1904,7 +1904,7 @@ git commit -m "test(workflow): harden the adaptive loop in real browsers"
 - Consumes: the complete local Phase 2 implementation.
 - Produces: accurate operator commands, clean setup instructions, final proof output, and an exact next-phase handoff without beginning live MIND or broader catalog work.
 
-- [ ] **Step 1: Update the operator runbook**
+- [x] **Step 1: Update the operator runbook**
 
 Document:
 
@@ -1919,7 +1919,7 @@ Document:
 8. Local `dev`, unit, browser, build, and `verify` commands.
 9. No Correction/blocker/auth/code-runner/live-provider scope.
 
-- [ ] **Step 2: Verify no forbidden or stale implementation survived**
+- [x] **Step 2: Verify no forbidden or stale implementation survived**
 
 Run:
 
@@ -1932,7 +1932,7 @@ rg -n "FakeMindGateway" src --glob '!**/*.test.ts' --glob '!**/testing/**'
 
 Expected: no foundation, Correction/blocker, browser secret, or production fake-MIND import. Documentation/examples may mention forbidden items only to state that they do not exist.
 
-- [ ] **Step 3: Run fresh complete verification**
+- [x] **Step 3: Run fresh complete verification**
 
 Run:
 
@@ -1948,7 +1948,7 @@ npm run build
 
 Expected: every command exits 0 on the exact handoff tree. Read complete output; do not infer success from truncated logs.
 
-- [ ] **Step 4: Recheck database invariants**
+- [x] **Step 4: Recheck database invariants**
 
 Against a fresh temporary database, run migration and seed twice, then assert/report:
 
@@ -1963,7 +1963,7 @@ Against a fresh temporary database, run migration and seed twice, then assert/re
 
 Run the persisted adaptation integration once more and record the exact first, second, and third recommended titles plus MEMORY transitions.
 
-- [ ] **Step 5: Commit documentation and accurate checkboxes**
+- [x] **Step 5: Commit documentation and accurate checkboxes**
 
 Run lint, type-check, and build once more after the documentation edit, then:
 
@@ -1972,7 +1972,7 @@ git add README.md drizzle/README.md docs/superpowers/plans/2026-07-14-phase-2-ad
 git commit -m "docs(runbook): document the adaptive spine workflow"
 ```
 
-- [ ] **Step 6: Stop at the approved boundary**
+- [x] **Step 6: Stop at the approved boundary**
 
 Report only:
 
