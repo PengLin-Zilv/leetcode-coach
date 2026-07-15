@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { startPracticeAction } from "../../app/practice/actions.server";
 import type { RecommendationResult } from "../recommendation/recommend-next";
 import styles from "./today-recommendation.module.css";
 
@@ -67,7 +68,7 @@ export function TodayRecommendation({
           <p>{reason}</p>
         </div>
 
-        <form>
+        <form action={startPracticeAction}>
           <input name="problemId" type="hidden" value={problem.id} />
           <button className={styles.primaryAction} type="submit">
             Start session
