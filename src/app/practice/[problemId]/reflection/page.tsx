@@ -36,6 +36,7 @@ export default async function AttemptReflectionPage({
       highestHintLevel={active.highestHintLevel}
       problemId={problem.id}
       problemTitle={problem.title}
+      startedAt={active.startedAt}
     />
   );
 }

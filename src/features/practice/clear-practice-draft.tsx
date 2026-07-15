@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 
 export function ClearPracticeDraft({
-  problemId,
-}: Readonly<{ problemId: string }>) {
+  storageKey,
+}: Readonly<{ storageKey: string }>) {
   useEffect(() => {
-    window.localStorage.removeItem(`leetcode-coach:practice:${problemId}`);
-  }, [problemId]);
+    window.localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   return null;
 }

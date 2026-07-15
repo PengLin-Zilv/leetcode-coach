@@ -7,6 +7,7 @@ import {
   type AttemptReflectionActionState,
 } from "../../app/practice/[problemId]/reflection/actions.server";
 import { SubmitButton } from "../../components/submit-button";
+import { practiceDraftStorageKey } from "../practice/active-practice";
 import styles from "./attempt-reflection-form.module.css";
 
 const INITIAL_STATE: AttemptReflectionActionState = {};
@@ -21,15 +22,17 @@ export function AttemptReflectionForm({
   highestHintLevel,
   problemId,
   problemTitle,
+  startedAt,
 }: Readonly<{
   highestHintLevel: number;
   problemId: string;
   problemTitle: string;
+  startedAt: string;
 }>) {
   const submit = submitAttemptReflectionAction.bind(null, problemId);
   const [state, action] = useActionState(submit, INITIAL_STATE);
   const noteRef = useRef<HTMLTextAreaElement>(null);
-  const storageKey = `leetcode-coach:practice:${problemId}`;
+  const storageKey = practiceDraftStorageKey(problemId, startedAt);
 
   useEffect(() => {
     if (noteRef.current !== null) {

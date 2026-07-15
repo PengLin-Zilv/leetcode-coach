@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { cookies } from "next/headers";
+import { z } from "zod";
 
 import { getPracticeCookieConfig } from "../../config/env.server";
 import { systemClock, type Clock } from "../../lib/clock";
@@ -12,6 +13,18 @@ import {
 } from "./active-practice";
 
 export const ACTIVE_PRACTICE_COOKIE_NAME = "lc_active_practice";
+
+const practiceDraftCleanupIdentitySchema = z
+  .object({
+    attemptId: z.uuidv7(),
+    problemId: z.uuidv7(),
+    startedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+export type PracticeDraftCleanupIdentity = Readonly<
+  z.infer<typeof practiceDraftCleanupIdentitySchema>
+>;
 
 function signatureFor(encodedPayload: string, secret: string): Buffer {
   return createHmac("sha256", secret).update(encodedPayload).digest();
@@ -31,11 +44,8 @@ function hasValidSignature(
   return matches && supplied.length === expected.length;
 }
 
-export function encodeActivePracticeCookie(
-  active: ActivePractice,
-  secret: string,
-): string {
-  const encodedPayload = Buffer.from(JSON.stringify(active)).toString(
+function encodeSignedPayload(payload: unknown, secret: string): string {
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
     "base64url",
   );
   const signature = signatureFor(encodedPayload, secret).toString("base64url");
@@ -43,12 +53,10 @@ export function encodeActivePracticeCookie(
   return `${encodedPayload}.${signature}`;
 }
 
-export function decodeActivePracticeCookie(
+function decodeSignedPayload(
   value: string | undefined,
-  routeProblemId: unknown,
-  now: Date,
   secret: string,
-): ActivePractice | null {
+): unknown | null {
   if (value === undefined) {
     return null;
   }
@@ -67,16 +75,84 @@ export function decodeActivePracticeCookie(
     return null;
   }
 
-  let payload: unknown;
   try {
-    payload = JSON.parse(
+    return JSON.parse(
       Buffer.from(encodedPayload, "base64url").toString("utf8"),
     );
   } catch {
     return null;
   }
+}
+
+export function encodeActivePracticeCookie(
+  active: ActivePractice,
+  secret: string,
+): string {
+  return encodeSignedPayload(active, secret);
+}
+
+export function decodeActivePracticeCookie(
+  value: string | undefined,
+  routeProblemId: unknown,
+  now: Date,
+  secret: string,
+): ActivePractice | null {
+  const payload = decodeSignedPayload(value, secret);
 
   return parseActivePracticePayload(payload, routeProblemId, now);
+}
+
+export function encodePracticeDraftCleanupToken(
+  identity: PracticeDraftCleanupIdentity,
+  secret: string,
+): string {
+  return encodeSignedPayload(
+    practiceDraftCleanupIdentitySchema.parse(identity),
+    secret,
+  );
+}
+
+export function decodePracticeDraftCleanupToken(
+  value: string | undefined,
+  expectedAttemptId: string,
+  expectedProblemId: string,
+  secret: string,
+): PracticeDraftCleanupIdentity | null {
+  const identity = practiceDraftCleanupIdentitySchema.safeParse(
+    decodeSignedPayload(value, secret),
+  );
+
+  if (
+    !identity.success ||
+    identity.data.attemptId !== expectedAttemptId ||
+    identity.data.problemId !== expectedProblemId
+  ) {
+    return null;
+  }
+
+  return identity.data;
+}
+
+export function issuePracticeDraftCleanupToken(
+  identity: PracticeDraftCleanupIdentity,
+): string {
+  return encodePracticeDraftCleanupToken(
+    identity,
+    getPracticeCookieConfig().secret,
+  );
+}
+
+export function verifyPracticeDraftCleanupToken(
+  value: string | undefined,
+  expectedAttemptId: string,
+  expectedProblemId: string,
+): PracticeDraftCleanupIdentity | null {
+  return decodePracticeDraftCleanupToken(
+    value,
+    expectedAttemptId,
+    expectedProblemId,
+    getPracticeCookieConfig().secret,
+  );
 }
 
 export async function readActivePractice(

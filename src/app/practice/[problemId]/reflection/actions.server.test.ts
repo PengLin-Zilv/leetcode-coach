@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getPatterns: vi.fn(),
   getProblems: vi.fn(),
   getProblemPatterns: vi.fn(),
+  issuePracticeDraftCleanupToken: vi.fn(),
   readActivePractice: vi.fn(),
   redirect: vi.fn(),
   requestAttemptFeedback: vi.fn(),
@@ -27,6 +28,7 @@ vi.mock("../../../../features/mind/request-mind", () => ({
 }));
 vi.mock("../../../../features/practice/active-practice.server", () => ({
   clearActivePractice: mocks.clearActivePractice,
+  issuePracticeDraftCleanupToken: mocks.issuePracticeDraftCleanupToken,
   readActivePractice: mocks.readActivePractice,
 }));
 vi.mock("../../../../features/training/complete-attempt", () => ({
@@ -78,6 +80,9 @@ describe("submitAttemptReflectionAction", () => {
     mocks.getProblemPatterns
       .mockReset()
       .mockResolvedValue([{ problemId, patternId }]);
+    mocks.issuePracticeDraftCleanupToken
+      .mockReset()
+      .mockReturnValue("signed-cleanup-token");
     mocks.readActivePractice.mockReset().mockResolvedValue({
       problemId,
       startedAt: "2026-07-14T15:00:00.000Z",
@@ -140,7 +145,14 @@ describe("submitAttemptReflectionAction", () => {
     expect(
       mocks.requestAttemptFeedback.mock.invocationCallOrder[0],
     ).toBeLessThan(mocks.clearActivePractice.mock.invocationCallOrder[0]);
-    expect(mocks.redirect).toHaveBeenCalledWith(`/feedback/${attemptId}`);
+    expect(mocks.issuePracticeDraftCleanupToken).toHaveBeenCalledWith({
+      attemptId,
+      problemId,
+      startedAt: "2026-07-14T15:00:00.000Z",
+    });
+    expect(mocks.redirect).toHaveBeenCalledWith(
+      `/feedback/${attemptId}?cleanup=signed-cleanup-token`,
+    );
   });
 
   it("caps duration at 180 minutes from the signed start time", async () => {
@@ -172,7 +184,9 @@ describe("submitAttemptReflectionAction", () => {
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(mocks.clearActivePractice).toHaveBeenCalledOnce();
-    expect(mocks.redirect).toHaveBeenCalledWith(`/feedback/${attemptId}`);
+    expect(mocks.redirect).toHaveBeenCalledWith(
+      `/feedback/${attemptId}?cleanup=signed-cleanup-token`,
+    );
   });
 
   it("does not clear active practice or request MIND when the Attempt commit fails", async () => {

@@ -13,6 +13,7 @@ import { getFeedback, type FeedbackRepository } from "./get-feedback.server";
 const attemptId = "0190f6f5-9b5a-7a22-8c44-123456789abc";
 const problemId = "0190f6f5-9b5a-7a22-8c44-123456789abd";
 const patternId = "0190f6f5-9b5a-7a22-8c44-123456789abe";
+const secondPatternId = "0190f6f5-9b5a-7a22-8c44-123456789ac0";
 
 const attempt: Attempt = {
   id: attemptId,
@@ -78,6 +79,23 @@ class FakeFeedbackRepository implements FeedbackRepository {
   }
 }
 
+function addSecondMappedPattern(repository: FakeFeedbackRepository): void {
+  repository.patterns.push({
+    id: secondPatternId,
+    name: "Set Reasoning",
+    slug: "set-reasoning",
+  });
+  repository.problemPatterns.push({ problemId, patternId: secondPatternId });
+  repository.skillStates.push({
+    id: "0190f6f5-9b5a-7a22-8c44-123456789ac1",
+    patternId: secondPatternId,
+    mastery: "practicing",
+    recentSuccess: 1,
+    nextReviewDate: "2026-07-17",
+    lastComputedAt: new Date("2026-07-14T15:00:01.000Z"),
+  });
+}
+
 describe("getFeedback", () => {
   it("derives an exact reload-safe MEMORY transition and review cue from Attempts", async () => {
     const repository = new FakeFeedbackRepository();
@@ -125,6 +143,59 @@ describe("getFeedback", () => {
       memory: { status: "stale" },
     });
   });
+
+  it("derives one independent transition for every mapped Pattern", async () => {
+    const repository = new FakeFeedbackRepository();
+    addSecondMappedPattern(repository);
+
+    await expect(getFeedback({ repository }, attemptId)).resolves.toMatchObject(
+      {
+        memory: {
+          status: "updated",
+          changes: [
+            {
+              patternId,
+              patternName: "Arrays & Hashing",
+              before: "unseen",
+              after: "practicing",
+            },
+            {
+              patternId: secondPatternId,
+              patternName: "Set Reasoning",
+              before: "unseen",
+              after: "practicing",
+            },
+          ],
+        },
+      },
+    );
+  });
+
+  it.each(["missing", "older"] as const)(
+    "marks the whole multi-pattern MEMORY update stale when one mapped row is %s",
+    async (staleKind) => {
+      const repository = new FakeFeedbackRepository();
+      addSecondMappedPattern(repository);
+      const secondStateIndex = repository.skillStates.findIndex(
+        ({ patternId: mappedPatternId }) => mappedPatternId === secondPatternId,
+      );
+
+      if (staleKind === "missing") {
+        repository.skillStates.splice(secondStateIndex, 1);
+      } else {
+        repository.skillStates[secondStateIndex] = {
+          ...repository.skillStates[secondStateIndex]!,
+          lastComputedAt: new Date("2026-07-14T15:00:00.999Z"),
+        };
+      }
+
+      await expect(
+        getFeedback({ repository }, attemptId),
+      ).resolves.toMatchObject({
+        memory: { status: "stale", changes: [{}, {}] },
+      });
+    },
+  );
 
   it("shows only a validated single MIND output for this Attempt", async () => {
     const repository = new FakeFeedbackRepository();

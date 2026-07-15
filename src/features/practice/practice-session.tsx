@@ -14,7 +14,10 @@ import {
   type HintActionResult,
 } from "../../app/practice/[problemId]/actions.server";
 import type { Pattern, Problem } from "../training/training-repository";
-import type { ActivePractice } from "./active-practice";
+import {
+  practiceDraftStorageKey,
+  type ActivePractice,
+} from "./active-practice";
 import styles from "./practice-session.module.css";
 
 type PresentationMode = "simpler" | "example" | "trace";
@@ -37,7 +40,7 @@ export function PracticeSession({
   pattern: Pattern;
   problem: Problem;
 }>) {
-  const storageKey = `leetcode-coach:practice:${problem.id}`;
+  const storageKey = practiceDraftStorageKey(problem.id, active.startedAt);
   const notesRef = useRef<HTMLTextAreaElement>(null);
   const notesValueRef = useRef("");
   const openMindButtonRef = useRef<HTMLButtonElement>(null);

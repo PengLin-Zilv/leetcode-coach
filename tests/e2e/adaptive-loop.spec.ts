@@ -1,6 +1,11 @@
-import { asc } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 
-import { attempts, mindOutputs, skillStates } from "../../src/db/schema";
+import {
+  attempts,
+  mindOutputs,
+  problemPatterns,
+  skillStates,
+} from "../../src/db/schema";
 import { expect, test } from "./fixtures";
 import { openBrowserDatabase } from "./support/database";
 import { FIRST_SESSION_PROFILE } from "./support/scenarios";
@@ -74,7 +79,7 @@ test("a persisted reflection updates MEMORY and changes the next Today task", as
   });
   await page.getByRole("button", { name: "Review this attempt" }).click();
 
-  await expect(page).toHaveURL(/\/feedback\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/feedback\/[0-9a-f-]+\?cleanup=/);
   await expect(page.getByText("Memory updated")).toBeVisible();
   const transition = page.getByText(/Unseen → Practicing/);
   const reviewCue = page.getByText(/Review .* in 3 days/);
@@ -204,4 +209,116 @@ test("Reflection and Feedback keep every action reachable at 320px", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("historical Feedback cannot clear a newer draft for the same Problem", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+  await page.getByLabel("Interview date").fill(FIRST_SESSION_PROFILE.deadline);
+  await page
+    .getByLabel("Sessions each week")
+    .selectOption(FIRST_SESSION_PROFILE.sessionsPerWeek);
+  await page
+    .getByLabel("Minutes per session")
+    .selectOption(FIRST_SESSION_PROFILE.minutesPerSession);
+  await page.getByLabel("Starting point").selectOption("new");
+  await page.getByRole("button", { name: "Build my first session" }).click();
+  await page.getByRole("button", { name: "Start session" }).click();
+  await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+
+  const firstPracticeUrl = page.url();
+  const problemId = firstPracticeUrl.split("/").at(-1);
+  expect(problemId).toBeTruthy();
+  await page.getByLabel("Notes").fill("First session draft.");
+  const firstDraftKey = await page.evaluate(() =>
+    Object.keys(window.localStorage).find((key) =>
+      key.startsWith("leetcode-coach:practice:"),
+    ),
+  );
+  expect(firstDraftKey).toBeTruthy();
+  await page.getByRole("link", { name: "End attempt" }).first().click();
+  await expect(
+    page.getByRole("heading", { name: "Finish attempt" }),
+  ).toBeVisible();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+  await expect(page.getByText("Memory updated")).toBeVisible();
+
+  const firstFeedbackUrl = page.url();
+  expect(
+    await page.evaluate(
+      (key) => window.localStorage.getItem(key ?? ""),
+      firstDraftKey,
+    ),
+  ).toBeNull();
+
+  const connection = await openBrowserDatabase();
+  try {
+    const [storedAttempt] = await connection.database.select().from(attempts);
+    const [mapping] = await connection.database
+      .select()
+      .from(problemPatterns)
+      .where(eq(problemPatterns.problemId, problemId!));
+    if (!storedAttempt || !mapping) {
+      throw new Error("Expected the first Attempt and Problem mapping");
+    }
+
+    await connection.database
+      .update(attempts)
+      .set({ occurredAt: new Date("2026-07-01T15:00:00.000Z") })
+      .where(eq(attempts.id, storedAttempt.id));
+    await connection.database
+      .delete(problemPatterns)
+      .where(
+        and(
+          eq(problemPatterns.patternId, mapping.patternId),
+          ne(problemPatterns.problemId, problemId!),
+        ),
+      );
+  } finally {
+    connection.close();
+  }
+
+  await page.getByRole("link", { name: "Finish" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Contains Duplicate" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Start session" }).click();
+  await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+  const secondPracticeUrl = page.url();
+  expect(secondPracticeUrl).toBe(firstPracticeUrl);
+  await page.getByLabel("Notes").fill("Second session draft must survive.");
+  const secondDraftKey = await page.evaluate(
+    (oldKey) =>
+      Object.keys(window.localStorage).find(
+        (key) => key.startsWith("leetcode-coach:practice:") && key !== oldKey,
+      ),
+    firstDraftKey,
+  );
+  expect(secondDraftKey).toMatch(
+    new RegExp(`^leetcode-coach:practice:${problemId}:`),
+  );
+
+  await page.goto(firstFeedbackUrl);
+  expect(
+    await page.evaluate(
+      (key) => window.localStorage.getItem(key ?? ""),
+      secondDraftKey,
+    ),
+  ).toBe("Second session draft must survive.");
+
+  await page.goto(`${secondPracticeUrl}/reflection`);
+  await expect(page.getByLabel("Optional note")).toHaveValue(
+    "Second session draft must survive.",
+  );
+  await page.getByLabel("Not solved yet").check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+  await expect(page.getByText(/Memory update/)).toBeVisible();
+  expect(
+    await page.evaluate(
+      (key) => window.localStorage.getItem(key ?? ""),
+      secondDraftKey,
+    ),
+  ).toBeNull();
 });

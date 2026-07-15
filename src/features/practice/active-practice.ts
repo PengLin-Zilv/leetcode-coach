@@ -43,6 +43,13 @@ export interface ActivePractice {
   readonly highestHintLevel: 0 | 1 | 2 | 3 | 4;
 }
 
+export function practiceDraftStorageKey(
+  problemId: string,
+  startedAt: string,
+): string {
+  return `leetcode-coach:practice:${problemId}:${startedAt}`;
+}
+
 export type PracticeEvent = Readonly<z.infer<typeof practiceEventSchema>>;
 
 export function startPractice(problemId: unknown, now: Date): ActivePractice {

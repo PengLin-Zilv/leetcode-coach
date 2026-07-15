@@ -12,6 +12,7 @@ import { requestAttemptFeedback } from "../../../../features/mind/request-mind";
 import { UnavailableMindGateway } from "../../../../features/mind/unavailable-gateway.server";
 import {
   clearActivePractice,
+  issuePracticeDraftCleanupToken,
   readActivePractice,
 } from "../../../../features/practice/active-practice.server";
 import { completeAttempt } from "../../../../features/training/complete-attempt";
@@ -103,6 +104,12 @@ export async function submitAttemptReflectionAction(
     return { formError: "Your attempt could not be saved. Try again." };
   }
 
+  const cleanupToken = issuePracticeDraftCleanupToken({
+    attemptId: completion.attemptId,
+    problemId: problemId.data,
+    startedAt: active.startedAt,
+  });
+
   try {
     const [problems, patterns, problemPatterns] = await Promise.all([
       repository.getProblems(),
@@ -147,5 +154,7 @@ export async function submitAttemptReflectionAction(
   revalidatePath("/today");
   revalidatePath("/progress");
   revalidatePath(`/feedback/${completion.attemptId}`);
-  redirect(`/feedback/${completion.attemptId}`);
+  redirect(
+    `/feedback/${completion.attemptId}?cleanup=${encodeURIComponent(cleanupToken)}`,
+  );
 }

@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   decodeActivePracticeCookie,
+  decodePracticeDraftCleanupToken,
   encodeActivePracticeCookie,
+  encodePracticeDraftCleanupToken,
 } from "./active-practice.server";
 import { startPractice } from "./active-practice";
 
 const problemId = "0190f6f5-9b5a-7a22-8c44-123456789abd";
 const otherProblemId = "0190f6f5-9b5a-7a22-8c44-123456789abe";
+const attemptId = "0190f6f5-9b5a-7a22-8c44-123456789abf";
+const otherAttemptId = "0190f6f5-9b5a-7a22-8c44-123456789ac0";
 const now = new Date("2026-07-14T15:00:00.000Z");
 const secret = "task-nine-test-practice-cookie-secret-value";
 
@@ -105,6 +109,75 @@ describe("authenticated active practice cookie", () => {
   ])("rejects malformed signed value %s", (value) => {
     expect(
       decodeActivePracticeCookie(value, problemId, now, secret),
+    ).toBeNull();
+  });
+});
+
+describe("authenticated practice draft cleanup token", () => {
+  const cleanup = {
+    attemptId,
+    problemId,
+    startedAt: "2026-07-14T14:55:00.000Z",
+  };
+
+  it("round-trips only for its persisted Attempt and Problem", () => {
+    const signedValue = encodePracticeDraftCleanupToken(cleanup, secret);
+
+    expect(
+      decodePracticeDraftCleanupToken(
+        signedValue,
+        attemptId,
+        problemId,
+        secret,
+      ),
+    ).toEqual(cleanup);
+    expect(
+      decodePracticeDraftCleanupToken(
+        signedValue,
+        otherAttemptId,
+        problemId,
+        secret,
+      ),
+    ).toBeNull();
+    expect(
+      decodePracticeDraftCleanupToken(
+        signedValue,
+        attemptId,
+        otherProblemId,
+        secret,
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    [
+      "Attempt ID",
+      (payload: Record<string, unknown>) => {
+        payload.attemptId = otherAttemptId;
+      },
+    ],
+    [
+      "Problem ID",
+      (payload: Record<string, unknown>) => {
+        payload.problemId = otherProblemId;
+      },
+    ],
+    [
+      "start time",
+      (payload: Record<string, unknown>) => {
+        payload.startedAt = "2026-07-14T14:45:00.000Z";
+      },
+    ],
+  ] as const)("rejects a cleanup token with a changed %s", (_label, mutate) => {
+    const signedValue = encodePracticeDraftCleanupToken(cleanup, secret);
+
+    expect(
+      decodePracticeDraftCleanupToken(
+        tamperPayload(signedValue, mutate),
+        attemptId,
+        problemId,
+        secret,
+      ),
     ).toBeNull();
   });
 });
