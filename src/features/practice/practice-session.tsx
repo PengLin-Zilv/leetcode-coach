@@ -42,8 +42,10 @@ export function PracticeSession({
   const notesValueRef = useRef("");
   const openMindButtonRef = useRef<HTMLButtonElement>(null);
   const closeMindButtonRef = useRef<HTMLButtonElement>(null);
+  const hintButtonRef = useRef<HTMLButtonElement>(null);
   const mindPanelRef = useRef<HTMLElement>(null);
   const wasMindOpenRef = useRef(false);
+  const restoreMindFocusToDesktopRef = useRef(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [hintResult, setHintResult] = useState<HintActionResult | null>(null);
   const [presentationMode, setPresentationMode] =
@@ -78,11 +80,36 @@ export function PracticeSession({
     if (mindOpen) {
       closeMindButtonRef.current?.focus();
     } else if (wasMindOpenRef.current) {
-      openMindButtonRef.current?.focus();
+      if (restoreMindFocusToDesktopRef.current) {
+        const hintButton = hintButtonRef.current;
+        if (hintButton !== null && !hintButton.disabled) {
+          hintButton.focus();
+        } else {
+          mindPanelRef.current
+            ?.querySelector<HTMLButtonElement>("button[aria-pressed]")
+            ?.focus();
+        }
+        restoreMindFocusToDesktopRef.current = false;
+      } else {
+        openMindButtonRef.current?.focus();
+      }
     }
 
     wasMindOpenRef.current = mindOpen;
   }, [mindOpen]);
+
+  useEffect(() => {
+    const desktopViewport = window.matchMedia("(min-width: 701px)");
+    const exitMobileModal = (event: MediaQueryListEvent) => {
+      if (event.matches && wasMindOpenRef.current) {
+        restoreMindFocusToDesktopRef.current = true;
+        setMindOpen(false);
+      }
+    };
+
+    desktopViewport.addEventListener("change", exitMobileModal);
+    return () => desktopViewport.removeEventListener("change", exitMobileModal);
+  }, []);
 
   function requestCoaching(kind: "next_hint" | PresentationMode): void {
     startHintRequest(async () => {
@@ -281,6 +308,7 @@ export function PracticeSession({
             className={styles.hintButton}
             disabled={isRequestingHint || hintDepth === 4}
             onClick={() => requestCoaching("next_hint")}
+            ref={hintButtonRef}
             type="button"
           >
             {isRequestingHint ? "Checking coaching…" : "Give me a hint"}

@@ -182,6 +182,35 @@ test("practice exposes MIND as a labelled sheet without horizontal overflow at 3
   ).toBe(true);
 });
 
+test("practice exits contained MIND state when resizing from mobile to desktop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await startFirstPractice(page);
+
+  await page.getByRole("button", { name: "Open coaching" }).click();
+  await expect(page.getByRole("dialog", { name: "MIND" })).toBeVisible();
+
+  const backgroundHeader = page.locator("header").first();
+  const backgroundPractice = page.locator(
+    'section[aria-labelledby="practice-title"]',
+  );
+  await page.setViewportSize({ width: 900, height: 700 });
+
+  await expect(page.getByRole("dialog", { name: "MIND" })).toHaveCount(0);
+  await expect(backgroundHeader).not.toHaveAttribute("inert", "");
+  await expect(backgroundHeader).not.toHaveAttribute("aria-hidden", "true");
+  await expect(backgroundPractice).not.toHaveAttribute("inert", "");
+  await expect(backgroundPractice).not.toHaveAttribute("aria-hidden", "true");
+  await expect(page.getByRole("link", { name: "End attempt" })).toBeVisible();
+
+  const giveHint = page.getByRole("button", { name: "Give me a hint" });
+  await expect(giveHint).toBeVisible();
+  await expect(giveHint).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Simpler" })).toBeFocused();
+});
+
 function waitForPracticeAction(page: Page) {
   return page.waitForResponse(
     (response) =>
