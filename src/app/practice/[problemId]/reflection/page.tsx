@@ -22,13 +22,13 @@ export default async function AttemptReflectionPage({
     readActivePractice(problemId.data),
     repository.getProblems(),
   ]);
-  if (active === null) {
-    redirect("/today");
-  }
-
   const problem = problems.find(({ id }) => id === problemId.data);
   if (problem === undefined) {
     notFound();
+  }
+
+  if (active === null) {
+    redirect("/today");
   }
 
   return (

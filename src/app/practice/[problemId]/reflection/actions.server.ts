@@ -23,7 +23,9 @@ import { createId } from "../../../../lib/id";
 const problemIdSchema = z.uuidv7();
 const reflectionFormSchema = z
   .object({
-    result: z.enum(["solved", "not_solved", "viewed_solution"]),
+    result: z.enum(["solved", "not_solved", "viewed_solution"], {
+      error: "Select a result.",
+    }),
     confidence: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.enum(["1", "2", "3", "4", "5"]).optional(),

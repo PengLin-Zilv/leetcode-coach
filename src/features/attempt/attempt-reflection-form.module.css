@@ -6,7 +6,7 @@
 
 .panel {
   padding: 32px;
-  border: 1px solid #dfe4df;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface);
 }
@@ -64,11 +64,11 @@
 
 .resultOption {
   display: flex;
-  min-height: 48px;
+  min-height: var(--control-stable-height);
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid #aab3ac;
+  padding: var(--space-control-block) var(--space-control-inline);
+  border: 1px solid var(--color-control-border);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -103,7 +103,7 @@
 }
 
 .field select {
-  min-height: 48px;
+  min-height: var(--control-stable-height);
 }
 
 .field textarea {
@@ -115,8 +115,8 @@
 .field select:focus-visible,
 .field textarea:focus-visible,
 .submit:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset-tight);
 }
 
 .fieldError,
@@ -129,7 +129,7 @@
 }
 
 .submit {
-  min-height: 48px;
+  min-height: var(--control-stable-height);
   padding: 12px 20px;
   border: 0;
   border-radius: 6px;

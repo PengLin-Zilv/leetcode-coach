@@ -26,10 +26,6 @@ export default async function PracticePage({
     repository.getProblemPatterns(),
   ]);
 
-  if (active === null) {
-    redirect("/today");
-  }
-
   const problem = problems.find(({ id }) => id === problemId.data);
   const patternId = problemPatterns.find(
     ({ problemId: catalogProblemId }) => catalogProblemId === problemId.data,
@@ -38,6 +34,10 @@ export default async function PracticePage({
 
   if (problem === undefined || pattern === undefined) {
     notFound();
+  }
+
+  if (active === null) {
+    redirect("/today");
   }
 
   return (

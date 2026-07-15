@@ -194,7 +194,12 @@ export function PracticeSession({
           <span>{problem.title}</span>
           <span>{pattern.name}</span>
         </div>
-        <span className={styles.timer} role="timer" aria-label="Elapsed time">
+        <span
+          aria-label="Elapsed time"
+          aria-live="off"
+          className={styles.timer}
+          role="timer"
+        >
           {formatElapsed(elapsedSeconds)}
         </span>
         <Link
@@ -235,6 +240,7 @@ export function PracticeSession({
             target="_blank"
           >
             Open problem on LeetCode
+            <span className={styles.visuallyHidden}> (opens in a new tab)</span>
           </a>
 
           <label className={styles.notesLabel} htmlFor="practice-notes">

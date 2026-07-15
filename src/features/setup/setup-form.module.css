@@ -11,7 +11,7 @@
 
 .panel {
   padding: 32px;
-  border: 1px solid #dfe4df;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface);
 }
@@ -40,7 +40,7 @@
 .notice {
   padding: 12px 16px;
   border-left: 4px solid var(--color-review);
-  background: #fff8e8;
+  background: var(--color-review-surface);
   color: #634400;
 }
 
@@ -62,9 +62,9 @@
 .field input,
 .field select {
   width: 100%;
-  min-height: 48px;
-  padding: 10px 12px;
-  border: 1px solid #aab3ac;
+  min-height: var(--control-stable-height);
+  padding: var(--space-control-block) var(--space-control-inline);
+  border: 1px solid var(--color-control-border);
   border-radius: 6px;
   background: var(--color-surface);
   color: var(--color-ink);
@@ -74,8 +74,8 @@
 .field input:focus-visible,
 .field select:focus-visible,
 .submit:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset-tight);
 }
 
 .field input[aria-invalid="true"],
@@ -93,7 +93,7 @@
 }
 
 .submit {
-  min-height: 48px;
+  min-height: var(--control-stable-height);
   padding: 12px 20px;
   border: 0;
   border-radius: 6px;

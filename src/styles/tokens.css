@@ -7,4 +7,18 @@
   --color-review: #946200;
   --color-error: #b42318;
   --color-error-surface: #fff1f0;
+  --color-border: #dfe4df;
+  --color-subtle-border: #cbd3cd;
+  --color-control-border: #aab3ac;
+  --color-muted-surface: #eef8f1;
+  --color-review-surface: #fff8e8;
+  --control-min-height: 44px;
+  --control-stable-height: 48px;
+  --focus-ring: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
+  --focus-ring-offset: 3px;
+  --focus-ring-offset-tight: 2px;
+  --motion-duration: 160ms;
+  --space-control-block: 10px;
+  --space-control-inline: 12px;
+  --space-page-inline: 24px;
 }

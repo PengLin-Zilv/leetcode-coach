@@ -32,6 +32,7 @@ export function AttemptReflectionForm({
   const submit = submitAttemptReflectionAction.bind(null, problemId);
   const [state, action] = useActionState(submit, INITIAL_STATE);
   const noteRef = useRef<HTMLTextAreaElement>(null);
+  const firstResultRef = useRef<HTMLInputElement>(null);
   const storageKey = practiceDraftStorageKey(problemId, startedAt);
 
   useEffect(() => {
@@ -39,6 +40,12 @@ export function AttemptReflectionForm({
       noteRef.current.value = window.localStorage.getItem(storageKey) ?? "";
     }
   }, [storageKey]);
+
+  useEffect(() => {
+    if (state.fieldErrors?.result?.[0]) {
+      firstResultRef.current?.focus();
+    }
+  }, [state.fieldErrors?.result]);
 
   return (
     <main className={styles.page}>
@@ -50,18 +57,30 @@ export function AttemptReflectionForm({
           seconds.
         </p>
 
-        <form action={action} className={styles.form}>
+        <form action={action} className={styles.form} noValidate>
           <fieldset className={styles.fieldset}>
             <legend>Result</legend>
             <div className={styles.resultOptions}>
               {resultOptions.map(({ label, value }) => (
                 <label className={styles.resultOption} key={value}>
-                  <input name="result" required type="radio" value={value} />
+                  <input
+                    aria-describedby={
+                      state.fieldErrors?.result ? "result-error" : undefined
+                    }
+                    name="result"
+                    ref={value === "solved" ? firstResultRef : undefined}
+                    required
+                    type="radio"
+                    value={value}
+                  />
                   <span>{label}</span>
                 </label>
               ))}
             </div>
-            <FieldError messages={state.fieldErrors?.result} />
+            <FieldError
+              id="result-error"
+              messages={state.fieldErrors?.result}
+            />
             <p className={styles.evidenceNote}>
               A solved result counts as independent only when the server-owned
               hint depth is zero. This session recorded hint depth{" "}
@@ -113,8 +132,13 @@ export function AttemptReflectionForm({
   );
 }
 
-function FieldError({ messages }: Readonly<{ messages?: readonly string[] }>) {
+function FieldError({
+  id,
+  messages,
+}: Readonly<{ id?: string; messages?: readonly string[] }>) {
   return messages?.[0] ? (
-    <span className={styles.fieldError}>{messages[0]}</span>
+    <span className={styles.fieldError} id={id} role="alert">
+      {messages[0]}
+    </span>
   ) : null;
 }
