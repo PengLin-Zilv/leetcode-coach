@@ -266,7 +266,7 @@ export function PracticeSession({
           aria-labelledby="mind-title"
           aria-modal={mindOpen ? true : undefined}
           className={`${styles.mindPanel} ${mindOpen ? styles.mindPanelOpen : ""}`}
-          onKeyDown={containMindFocus}
+          onKeyDown={mindOpen ? containMindFocus : undefined}
           ref={mindPanelRef}
           role={mindOpen ? "dialog" : undefined}
         >

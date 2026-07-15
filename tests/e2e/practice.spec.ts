@@ -209,6 +209,19 @@ test("practice exits contained MIND state when resizing from mobile to desktop",
   await expect(giveHint).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Simpler" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Example" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Trace it" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(
+    await page.evaluate(() => {
+      const mindPanel = document.querySelector(
+        'aside[aria-labelledby="mind-title"]',
+      );
+      return mindPanel?.contains(document.activeElement) ?? true;
+    }),
+  ).toBe(false);
 });
 
 function waitForPracticeAction(page: Page) {
