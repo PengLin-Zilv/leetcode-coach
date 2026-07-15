@@ -217,16 +217,16 @@ describe("submitAttemptReflectionAction", () => {
     expect(mocks.clearActivePractice).not.toHaveBeenCalled();
   });
 
-  it("validates the structured fields without accepting a blocker or Reflection body", async () => {
+  it("validates the structured fields without accepting unexpected fields or a Reflection body", async () => {
     const formData = reflectionForm();
     formData.set("result", "blocked");
-    formData.set("blocker", "edge cases");
+    formData.set("unexpected_field", "untrusted extra value");
     formData.set("body", "standalone reflection");
 
     const result = await submitAttemptReflectionAction(problemId, {}, formData);
 
     expect(result.fieldErrors?.result).toBeDefined();
-    expect(JSON.stringify(result)).not.toContain("edge cases");
+    expect(JSON.stringify(result)).not.toContain("untrusted extra value");
     expect(JSON.stringify(result)).not.toContain("standalone reflection");
     expect(mocks.readActivePractice).not.toHaveBeenCalled();
     expect(mocks.completeAttempt).not.toHaveBeenCalled();
