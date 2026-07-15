@@ -1,14 +1,54 @@
 import { mkdtemp, rm, stat, symlink } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { openBrowserDatabase } from "../tests/e2e/support/database";
 import { prepareE2eDatabase } from "./prepare-e2e";
 
+const ENCODED_ESCAPE_PATHS = [
+  (outsideName: string) =>
+    `file:./test-results/%2e%2e/${outsideName}/browser.db`,
+  (outsideName: string) =>
+    `file:./test-results/safe%2f..%2f..%2f${outsideName}%2fbrowser.db`,
+] as const;
+
+async function expectEncodedEscapeRejected(
+  open: (url: string) => Promise<unknown>,
+): Promise<void> {
+  for (const buildUrl of ENCODED_ESCAPE_PATHS) {
+    const outsideDirectory = await mkdtemp(
+      join(process.cwd(), "e2e-encoded-escape-"),
+    );
+    const escapedDatabasePath = join(outsideDirectory, "browser.db");
+
+    try {
+      await expect(open(buildUrl(basename(outsideDirectory)))).rejects.toThrow(
+        "E2E database must be a local test-results file",
+      );
+      await expect(stat(escapedDatabasePath)).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+    } finally {
+      await rm(outsideDirectory, { force: true, recursive: true });
+    }
+  }
+}
+
 describe("prepareE2eDatabase", () => {
+  it("refuses percent-encoded traversal and separators before preparation", async () => {
+    await expectEncodedEscapeRejected((url) => prepareE2eDatabase(url));
+  });
+
+  it("refuses percent-encoded traversal and separators before fixture opening", async () => {
+    await expectEncodedEscapeRejected(async (url) => {
+      const connection = await openBrowserDatabase(url);
+      connection.close();
+    });
+  });
+
   it("creates a missing database directory inside test-results", async () => {
     const relativeDirectory = join(
       "test-results",

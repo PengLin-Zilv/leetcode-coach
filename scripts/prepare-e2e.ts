@@ -25,7 +25,12 @@ export type E2eDatabase = LibSQLDatabase<typeof schema>;
 const E2E_DATABASE_PREFIX = "file:./test-results/";
 
 export function requireE2eDatabaseUrl(url: string | undefined): string {
-  if (!url || url === "file:./dev.db" || !url.startsWith(E2E_DATABASE_PREFIX)) {
+  if (
+    !url ||
+    url.includes("%") ||
+    url === "file:./dev.db" ||
+    !url.startsWith(E2E_DATABASE_PREFIX)
+  ) {
     throw new Error("E2E database must be a local test-results file");
   }
 

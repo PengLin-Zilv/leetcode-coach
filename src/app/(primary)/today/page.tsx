@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { TodayRecommendation } from "../../../features/today/today-recommendation";
+import { rebuildMemory } from "../../../features/memory/rebuild-memory.server";
 import { getTodayRecommendation } from "../../../features/recommendation/get-today.server";
 import { getTrainingRepository } from "../../../features/training/training-repository.server";
-import { systemClock } from "../../../lib/clock";
+import { systemClock, type Clock } from "../../../lib/clock";
+import { createId } from "../../../lib/id";
 import { toUtcDateKey } from "../../../lib/utc-date";
 
 export const dynamic = "force-dynamic";
@@ -27,13 +29,20 @@ export default async function TodayPage() {
     redirect("/setup");
   }
 
-  const today = toUtcDateKey(systemClock.now());
+  const now = systemClock.now();
+  const requestClock: Clock = { now: () => now };
+  const today = toUtcDateKey(now);
 
   if (profile.deadline < today) {
     redirect("/setup?reason=deadline-passed");
   }
 
-  const recommendation = await getTodayRecommendation();
+  const recommendation = await getTodayRecommendation({
+    repository,
+    clock: requestClock,
+    rebuildMemory: () =>
+      rebuildMemory({ repository, ids: createId, clock: requestClock }),
+  });
   const skillStates = await repository.getSkillStates();
   const dueReviewCount = skillStates.filter(
     ({ mastery, nextReviewDate }) =>
