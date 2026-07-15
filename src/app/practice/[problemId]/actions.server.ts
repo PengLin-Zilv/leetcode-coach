@@ -17,6 +17,7 @@ const hintActionInputSchema = z
   .object({
     problemId: z.uuidv7(),
     attemptSummary: z.string().trim().min(1).max(2_000),
+    kind: z.enum(["next_hint", "simpler", "example", "trace"]),
   })
   .strict();
 
@@ -45,7 +46,11 @@ export async function requestHintAction(
   }
 
   const active = await readActivePractice(parsedInput.data.problemId);
-  if (active === null || active.highestHintLevel === 4) {
+  if (
+    active === null ||
+    (parsedInput.data.kind === "next_hint" && active.highestHintLevel === 4) ||
+    (parsedInput.data.kind !== "next_hint" && active.highestHintLevel === 0)
+  ) {
     return unavailable();
   }
 
@@ -65,20 +70,39 @@ export async function requestHintAction(
     return unavailable();
   }
 
-  const result = await requestPracticeHint(
-    { gateway: new UnavailableMindGateway() },
-    {
-      kind: "next_hint",
-      problemId: problem.id,
-      problemTitle: problem.title,
-      patternName: pattern.name,
-      attemptSummary: parsedInput.data.attemptSummary,
-      currentHintLevel: active.highestHintLevel,
-    },
-  );
+  const context = {
+    problemId: problem.id,
+    problemTitle: problem.title,
+    patternName: pattern.name,
+    attemptSummary: parsedInput.data.attemptSummary,
+  };
+  const result =
+    parsedInput.data.kind === "next_hint"
+      ? await requestPracticeHint(
+          { gateway: new UnavailableMindGateway() },
+          {
+            ...context,
+            kind: "next_hint",
+            currentHintLevel: active.highestHintLevel as 0 | 1 | 2 | 3,
+          },
+        )
+      : await requestPracticeHint(
+          { gateway: new UnavailableMindGateway() },
+          {
+            ...context,
+            kind: parsedInput.data.kind,
+            currentHintLevel: active.highestHintLevel as 1 | 2 | 3 | 4,
+          },
+        );
 
   if (result.status === "unavailable") {
     return unavailable();
+  }
+
+  if (parsedInput.data.kind !== "next_hint") {
+    return result.hintLevel === active.highestHintLevel
+      ? result
+      : unavailable();
   }
 
   let updatedActive;

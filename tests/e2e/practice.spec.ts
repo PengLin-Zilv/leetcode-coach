@@ -8,9 +8,7 @@ import { FIRST_SESSION_PROFILE } from "./support/scenarios";
 
 async function startFirstPractice(page: Page): Promise<void> {
   await page.goto("/setup");
-  await page
-    .getByLabel("Interview date")
-    .fill(FIRST_SESSION_PROFILE.deadline);
+  await page.getByLabel("Interview date").fill(FIRST_SESSION_PROFILE.deadline);
   await page
     .getByLabel("Sessions each week")
     .selectOption(FIRST_SESSION_PROFILE.sessionsPerWeek);
@@ -88,6 +86,8 @@ test("practice preserves work and completion while coaching is unavailable", asy
     sameSite: "Lax",
     secure: false,
   });
+  expect(activeCookie?.value).toMatch(/^[^.]+\.[^.]+$/);
+  const activeCookieValue = activeCookie?.value;
 
   const notes = page.getByLabel("Notes");
   await notes.fill("Use a set and check before adding each value.");
@@ -102,7 +102,10 @@ test("practice preserves work and completion while coaching is unavailable", asy
   await expect(page.getByRole("link", { name: "End attempt" })).toBeVisible();
 
   const beforeUnavailableMind = await trainingStateFingerprint();
-  await page.getByRole("button", { name: "Give me a hint" }).click();
+  await Promise.all([
+    waitForPracticeAction(page),
+    page.getByRole("button", { name: "Give me a hint" }).click(),
+  ]);
   await expect(
     page.getByText("Coaching is temporarily unavailable"),
   ).toBeVisible();
@@ -117,12 +120,16 @@ test("practice preserves work and completion while coaching is unavailable", asy
   for (const control of ["Simpler", "Example", "Trace it"]) {
     const button = page.getByRole("button", { name: control });
     await expect(button).toBeEnabled();
-    await button.click();
+    await Promise.all([waitForPracticeAction(page), button.click()]);
     await expect(button).toHaveAttribute("aria-pressed", "true");
     await expect(hintDepth).toBeVisible();
   }
 
   expect(await trainingStateFingerprint()).toBe(beforeUnavailableMind);
+  const cookieAfterUnavailableMind = (await context.cookies()).find(
+    ({ name }) => name === "lc_active_practice",
+  );
+  expect(cookieAfterUnavailableMind?.value).toBe(activeCookieValue);
 });
 
 test("practice exposes MIND as a labelled sheet without horizontal overflow at 320px", async ({
@@ -133,14 +140,40 @@ test("practice exposes MIND as a labelled sheet without horizontal overflow at 3
 
   await expect(page.getByRole("link", { name: "End attempt" })).toBeVisible();
   const openCoaching = page.getByRole("button", { name: "Open coaching" });
+  const backgroundHeader = page.locator("header").first();
+  const backgroundPractice = page.locator(
+    'section[aria-labelledby="practice-title"]',
+  );
   await openCoaching.click();
-  await expect(page.getByRole("dialog", { name: "MIND" })).toBeVisible();
+  const dialog = page.getByRole("dialog", { name: "MIND" });
+  await expect(dialog).toBeVisible();
+  await expect(backgroundHeader).toHaveAttribute("inert", "");
+  await expect(backgroundHeader).toHaveAttribute("aria-hidden", "true");
+  await expect(backgroundPractice).toHaveAttribute("inert", "");
+  await expect(backgroundPractice).toHaveAttribute("aria-hidden", "true");
+  await expect(dialog.getByRole("link", { name: "End attempt" })).toBeVisible();
   const closeCoaching = page.getByRole("button", { name: "Close coaching" });
   await expect(closeCoaching).toBeFocused();
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Trace it" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(closeCoaching).toBeFocused();
+
+  await page.getByRole("button", { name: "Trace it" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(closeCoaching).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(openCoaching).toBeFocused();
+  await expect(backgroundHeader).not.toHaveAttribute("inert", "");
+
+  await openCoaching.click();
   await closeCoaching.click();
   await expect(openCoaching).toBeFocused();
   await openCoaching.click();
-  await expect(page.getByRole("link", { name: "End attempt" })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "End attempt" })).toBeVisible();
 
   expect(
     await page.evaluate(
@@ -148,3 +181,11 @@ test("practice exposes MIND as a labelled sheet without horizontal overflow at 3
     ),
   ).toBe(true);
 });
+
+function waitForPracticeAction(page: Page) {
+  return page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      /\/practice\/[0-9a-f-]+$/.test(new URL(response.url()).pathname),
+  );
+}

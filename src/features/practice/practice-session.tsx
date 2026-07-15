@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type KeyboardEvent,
+} from "react";
 
 import {
   requestHintAction,
@@ -36,6 +42,7 @@ export function PracticeSession({
   const notesValueRef = useRef("");
   const openMindButtonRef = useRef<HTMLButtonElement>(null);
   const closeMindButtonRef = useRef<HTMLButtonElement>(null);
+  const mindPanelRef = useRef<HTMLElement>(null);
   const wasMindOpenRef = useRef(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [hintResult, setHintResult] = useState<HintActionResult | null>(null);
@@ -77,15 +84,65 @@ export function PracticeSession({
     wasMindOpenRef.current = mindOpen;
   }, [mindOpen]);
 
-  function requestHint(): void {
+  function requestCoaching(kind: "next_hint" | PresentationMode): void {
     startHintRequest(async () => {
       const result = await requestHintAction({
         problemId: problem.id,
-        attemptSummary:
-          notesValueRef.current.trim() || "No attempt notes yet.",
+        attemptSummary: notesValueRef.current.trim() || "No attempt notes yet.",
+        kind,
       });
       setHintResult(result);
     });
+  }
+
+  function closeMind(): void {
+    setMindOpen(false);
+  }
+
+  function containMindFocus(event: KeyboardEvent<HTMLElement>): void {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMind();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const panel = mindPanelRef.current;
+    if (panel === null) {
+      return;
+    }
+
+    const focusable = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => element.getClientRects().length > 0);
+    const first = focusable[0];
+    const last = focusable.at(-1);
+
+    if (first === undefined || last === undefined) {
+      event.preventDefault();
+      return;
+    }
+
+    if (
+      event.shiftKey &&
+      (document.activeElement === first ||
+        !panel.contains(document.activeElement))
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (
+      !event.shiftKey &&
+      (document.activeElement === last ||
+        !panel.contains(document.activeElement))
+    ) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   const hintDepth =
@@ -95,7 +152,11 @@ export function PracticeSession({
 
   return (
     <div className={styles.sessionShell}>
-      <header className={styles.topBar}>
+      <header
+        aria-hidden={mindOpen ? "true" : undefined}
+        className={styles.topBar}
+        inert={mindOpen ? true : undefined}
+      >
         <Link className={styles.backLink} href="/today">
           ← Today
         </Link>
@@ -116,11 +177,18 @@ export function PracticeSession({
       </header>
 
       <main className={styles.layout}>
-        <section className={styles.practicePane} aria-labelledby="practice-title">
+        <section
+          aria-hidden={mindOpen ? "true" : undefined}
+          aria-labelledby="practice-title"
+          className={styles.practicePane}
+          inert={mindOpen ? true : undefined}
+        >
           <p className={styles.eyebrow}>Practice</p>
           <p className={styles.pattern}>{pattern.name}</p>
           <h1 id="practice-title">{problem.title}</h1>
-          <p className={styles.target}>{problem.estimatedMinutes} minute target</p>
+          <p className={styles.target}>
+            {problem.estimatedMinutes} minute target
+          </p>
 
           <div className={styles.goal}>
             <h2>Goal</h2>
@@ -169,8 +237,10 @@ export function PracticeSession({
 
         <aside
           aria-labelledby="mind-title"
-          aria-modal={mindOpen ? "true" : undefined}
+          aria-modal={mindOpen ? true : undefined}
           className={`${styles.mindPanel} ${mindOpen ? styles.mindPanelOpen : ""}`}
+          onKeyDown={containMindFocus}
+          ref={mindPanelRef}
           role={mindOpen ? "dialog" : undefined}
         >
           <div className={styles.mindHeader}>
@@ -178,13 +248,20 @@ export function PracticeSession({
             <button
               aria-label="Close coaching"
               className={styles.closeMindButton}
-              onClick={() => setMindOpen(false)}
+              onClick={closeMind}
               ref={closeMindButtonRef}
               type="button"
             >
               Close
             </button>
           </div>
+
+          <Link
+            className={styles.mindEndAction}
+            href={`/practice/${problem.id}/reflection`}
+          >
+            End attempt
+          </Link>
 
           <p className={styles.mindPrompt}>What have you tried so far?</p>
           <p className={styles.hintDepth}>Hint depth: {hintDepth} of 4</p>
@@ -203,7 +280,7 @@ export function PracticeSession({
           <button
             className={styles.hintButton}
             disabled={isRequestingHint || hintDepth === 4}
-            onClick={requestHint}
+            onClick={() => requestCoaching("next_hint")}
             type="button"
           >
             {isRequestingHint ? "Checking coaching…" : "Give me a hint"}
@@ -214,7 +291,10 @@ export function PracticeSession({
               <button
                 aria-pressed={presentationMode === mode}
                 key={mode}
-                onClick={() => setPresentationMode(mode)}
+                onClick={() => {
+                  setPresentationMode(mode);
+                  requestCoaching(mode);
+                }}
                 type="button"
               >
                 {label}

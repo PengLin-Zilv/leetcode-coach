@@ -21,6 +21,12 @@ The app is available at `http://localhost:3000`. The checked-in local template u
 `TURSO_DATABASE_URL=file:./dev.db` and `MIGRATION_TARGET=local`. `.env.local`, local
 database files, and all production credentials are ignored by Git.
 
+`PRACTICE_COOKIE_SECRET` signs transient practice-session state. Local development
+and tests use a deterministic non-production fallback when it is empty. Every
+production and preview deployment must set a random value of at least 32 characters
+(for example, generated with `openssl rand -hex 32`) as a server-only variable. Never
+prefix it with `NEXT_PUBLIC_`.
+
 ## Commands
 
 | Command                                                 | Purpose                                                                    |
@@ -114,10 +120,10 @@ must never generate or apply them.
    temporary page probes the connection with `select 1`.
 2. In the Vercel project UI, set **Project Settings -> Node.js Version** to `24.x`.
    Do not rely on an inferred default.
-3. In Vercel, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only variables
-   for each deployed environment that uses the probe. Never use a `NEXT_PUBLIC_`
-   prefix. `MIGRATION_TARGET` belongs to the manual migration file, not the running
-   application.
+3. In Vercel, set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, and a random
+   `PRACTICE_COOKIE_SECRET` of at least 32 characters as server-only variables for
+   each deployed environment. Never use a `NEXT_PUBLIC_` prefix.
+   `MIGRATION_TARGET` belongs to the manual migration file, not the running application.
 4. Set the Vercel build command to exactly `npm run build`. Do not add a migration
    command to the build, install, or deployment hooks.
 5. Deploy, then make a fresh request after the deployment has been idle long enough to

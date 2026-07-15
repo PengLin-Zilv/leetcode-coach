@@ -80,29 +80,18 @@ export function applyPracticeEvent(
   };
 }
 
-export function parseActivePracticeCookie(
-  value: string | undefined,
+export function parseActivePracticePayload(
+  value: unknown,
   routeProblemId: unknown,
   now: Date,
 ): ActivePractice | null {
   const parsedRouteProblemId = problemIdSchema.safeParse(routeProblemId);
 
-  if (
-    !parsedRouteProblemId.success ||
-    value === undefined ||
-    !Number.isFinite(now.getTime())
-  ) {
+  if (!parsedRouteProblemId.success || !Number.isFinite(now.getTime())) {
     return null;
   }
 
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(value);
-  } catch {
-    return null;
-  }
-
-  const parsedActive = activePracticeSchema.safeParse(decoded);
+  const parsedActive = activePracticeSchema.safeParse(value);
   if (
     !parsedActive.success ||
     parsedActive.data.problemId !== parsedRouteProblemId.data ||

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { startPractice } from "../../features/practice/active-practice";
 import { writeActivePractice } from "../../features/practice/active-practice.server";
+import { selectDueReviews } from "../../features/progress/select-due-reviews";
 import { getTodayRecommendation } from "../../features/recommendation/get-today.server";
 import { getTrainingRepository } from "../../features/training/training-repository.server";
 import { systemClock } from "../../lib/clock";
@@ -24,30 +25,24 @@ export async function startPracticeAction(formData: FormData): Promise<void> {
   const problemId = parsedProblemId.data;
   const now = systemClock.now();
   const repository = getTrainingRepository();
-  const [recommendation, skillStates, problemPatterns, problems] =
+  const recommendation = await getTodayRecommendation();
+  const [patterns, problems, problemPatterns, attempts, skillStates] =
     await Promise.all([
-      getTodayRecommendation(),
-      repository.getSkillStates(),
-      repository.getProblemPatterns(),
+      repository.getPatterns(),
       repository.getProblems(),
+      repository.getProblemPatterns(),
+      repository.getAttempts(),
+      repository.getSkillStates(),
     ]);
-  const today = toUtcDateKey(now);
-  const duePatternIds = new Set(
-    skillStates
-      .filter(
-        ({ mastery, nextReviewDate }) =>
-          mastery !== "unseen" &&
-          nextReviewDate !== null &&
-          nextReviewDate <= today,
-      )
-      .map(({ patternId }) => patternId),
-  );
-  const catalogProblemIds = new Set(problems.map(({ id }) => id));
   const dueProblemIds = new Set(
-    problemPatterns
-      .filter(({ patternId }) => duePatternIds.has(patternId))
-      .map(({ problemId: dueProblemId }) => dueProblemId)
-      .filter((dueProblemId) => catalogProblemIds.has(dueProblemId)),
+    selectDueReviews({
+      patterns,
+      problems,
+      problemPatterns,
+      attempts,
+      skillStates,
+      today: toUtcDateKey(now),
+    }).map(({ problemId: dueProblemId }) => dueProblemId),
   );
   const isCurrentRecommendation =
     recommendation.status === "recommended" &&

@@ -188,7 +188,8 @@
 }
 
 .closeMindButton,
-.openMindButton {
+.openMindButton,
+.mindEndAction {
   display: none;
 }
 
@@ -302,8 +303,8 @@
 
   .mindPanel {
     position: fixed;
-    z-index: 10;
-    top: 72px;
+    z-index: 30;
+    top: 0;
     right: 0;
     bottom: 0;
     left: 0;
@@ -321,6 +322,15 @@
   .closeMindButton {
     display: inline-flex;
     align-items: center;
+  }
+
+  .mindEndAction {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    margin-top: 16px;
+    color: var(--color-primary);
+    font-weight: 750;
   }
 }
 

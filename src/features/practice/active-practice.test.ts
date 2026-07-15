@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyPracticeEvent,
-  parseActivePracticeCookie,
+  parseActivePracticePayload,
   startPractice,
 } from "./active-practice";
 
@@ -68,14 +68,14 @@ describe("active practice", () => {
 });
 
 describe("active practice cookie validation", () => {
-  const validCookie = JSON.stringify({
+  const validPayload = {
     problemId,
     startedAt: "2026-07-14T14:55:00.000Z",
     highestHintLevel: 0,
-  });
+  };
 
   it("accepts strict state for the requested Problem", () => {
-    expect(parseActivePracticeCookie(validCookie, problemId, now)).toEqual({
+    expect(parseActivePracticePayload(validPayload, problemId, now)).toEqual({
       problemId,
       startedAt: "2026-07-14T14:55:00.000Z",
       highestHintLevel: 0,
@@ -84,63 +84,61 @@ describe("active practice cookie validation", () => {
 
   it.each([
     ["missing", undefined],
-    ["malformed JSON", "not-json"],
+    ["a non-object value", "not-an-object"],
     [
       "an extra field",
-      JSON.stringify({
+      {
         problemId,
         startedAt: "2026-07-14T14:55:00.000Z",
         highestHintLevel: 0,
         note: "must stay local",
-      }),
+      },
     ],
     [
       "an invalid UUID",
-      JSON.stringify({
+      {
         problemId: "not-a-problem-id",
         startedAt: "2026-07-14T14:55:00.000Z",
         highestHintLevel: 0,
-      }),
+      },
     ],
     [
       "a future start time",
-      JSON.stringify({
+      {
         problemId,
         startedAt: "2026-07-14T15:00:00.001Z",
         highestHintLevel: 0,
-      }),
+      },
     ],
     [
       "a negative hint level",
-      JSON.stringify({
+      {
         problemId,
         startedAt: "2026-07-14T14:55:00.000Z",
         highestHintLevel: -1,
-      }),
+      },
     ],
     [
       "a hint level above four",
-      JSON.stringify({
+      {
         problemId,
         startedAt: "2026-07-14T14:55:00.000Z",
         highestHintLevel: 5,
-      }),
+      },
     ],
-  ])("rejects %s", (_label, cookieValue) => {
-    expect(
-      parseActivePracticeCookie(cookieValue, problemId, now),
-    ).toBeNull();
+  ])("rejects %s", (_label, payload) => {
+    expect(parseActivePracticePayload(payload, problemId, now)).toBeNull();
   });
 
   it("rejects a cookie for a different Problem route", () => {
     expect(
-      parseActivePracticeCookie(validCookie, otherProblemId, now),
+      parseActivePracticePayload(validPayload, otherProblemId, now),
     ).toBeNull();
   });
 
   it("rejects an invalid route Problem ID", () => {
     expect(
-      parseActivePracticeCookie(validCookie, "not-a-problem-id", now),
+      parseActivePracticePayload(validPayload, "not-a-problem-id", now),
     ).toBeNull();
   });
 });
