@@ -62,7 +62,7 @@ async function runMigration(): Promise<void> {
   console.info("Migration completed");
 }
 
-void runMigration().catch(() => {
-  console.error("Migration failed");
+void runMigration().catch((error) => {
+  console.error("Migration failed:", error);
   process.exitCode = 1;
 });
