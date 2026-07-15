@@ -140,7 +140,22 @@ test("a persisted reflection updates MEMORY and changes the next Today task", as
     page.getByText(/Coaching is temporarily unavailable/),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Finish" }).click();
+  await page.getByRole("link", { name: "View progress" }).click();
+  await expect(page).toHaveURL(/\/progress$/);
+  await expect(
+    page.getByRole("row", { name: /Arrays & Hashing Practicing/ }),
+  ).toBeVisible();
+  await expect(page.getByText(/1 session completed/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Due reviews" })).toHaveCount(
+    0,
+  );
+
+  await page.reload();
+  await expect(
+    page.getByRole("row", { name: /Arrays & Hashing Practicing/ }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Today" }).click();
   await expect(page).toHaveURL(/\/today$/);
   const nextHeading = page.locator("h1#today-task");
   await expect(nextHeading).toBeVisible();
@@ -154,7 +169,56 @@ test("a persisted reflection updates MEMORY and changes the next Today task", as
   ).toBeVisible();
 });
 
-test("Reflection and Feedback keep every action reachable at 320px", async ({
+test("Progress exposes the exact due-review Problem that Practice authorizes", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+  await page.getByLabel("Interview date").fill(FIRST_SESSION_PROFILE.deadline);
+  await page
+    .getByLabel("Sessions each week")
+    .selectOption(FIRST_SESSION_PROFILE.sessionsPerWeek);
+  await page
+    .getByLabel("Minutes per session")
+    .selectOption(FIRST_SESSION_PROFILE.minutesPerSession);
+  await page.getByLabel("Starting point").selectOption("new");
+  await page.getByRole("button", { name: "Build my first session" }).click();
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("link", { name: "End attempt" }).first().click();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+  await expect(page.getByText("Memory updated")).toBeVisible();
+
+  const connection = await openBrowserDatabase();
+  try {
+    const [storedAttempt] = await connection.database.select().from(attempts);
+    if (!storedAttempt) {
+      throw new Error("Expected a persisted Attempt");
+    }
+
+    await connection.database
+      .update(attempts)
+      .set({ occurredAt: new Date("2026-07-01T15:00:00.000Z") })
+      .where(eq(attempts.id, storedAttempt.id));
+  } finally {
+    connection.close();
+  }
+
+  await page.goto("/progress");
+  await expect(
+    page.getByRole("heading", { name: "Due reviews" }),
+  ).toBeVisible();
+  const dueReview = page.getByRole("row", {
+    name: /Contains Duplicate.*Due.*Practice/,
+  });
+  await expect(dueReview).toBeVisible();
+  await dueReview.getByRole("button", { name: "Practice" }).click();
+  await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+  await expect(
+    page.getByRole("heading", { name: "Contains Duplicate" }),
+  ).toBeVisible();
+});
+
+test("Reflection, Feedback, and Progress stay usable at 320px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
@@ -203,6 +267,24 @@ test("Reflection and Feedback keep every action reachable at 320px", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+
+  await page.getByRole("link", { name: "View progress" }).click();
+  await expect(page).toHaveURL(/\/progress$/);
+  await expect(
+    page.getByRole("row", { name: /Arrays & Hashing.*Practicing/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("row", { name: /Heap \/ Priority Queue.*Unseen/ }),
+  ).toBeVisible();
+  const todayLink = page.getByRole("link", { name: "Today" });
+  await todayLink.focus();
+  await expect(todayLink).toBeFocused();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+
   await page.setViewportSize({ width: 390, height: 780 });
   expect(
     await page.evaluate(

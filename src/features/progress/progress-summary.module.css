@@ -1,0 +1,279 @@
+.page {
+  padding: 40px 0 64px;
+}
+
+.intro {
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.profileSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 0;
+  margin-top: 20px;
+  color: var(--color-muted);
+}
+
+.profileSummary span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.profileSummary span:not(:last-child)::after {
+  width: 1px;
+  height: 18px;
+  margin: 0 14px;
+  background: #cbd3cd;
+  content: "";
+}
+
+.section {
+  margin-top: 40px;
+}
+
+.section h2 {
+  margin: 0 0 14px;
+  font-size: 1.125rem;
+}
+
+.roadmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 0;
+  padding: 16px 0;
+  border-block: 1px solid #dfe4df;
+  list-style: none;
+}
+
+.roadmap li {
+  position: relative;
+  color: var(--color-muted);
+}
+
+.roadmap li:not(:last-child)::after {
+  position: absolute;
+  left: calc(100% + 8px);
+  color: #a4ada6;
+  content: "→";
+}
+
+.roadmap li[aria-current="step"] {
+  color: var(--color-ink);
+  font-weight: 750;
+}
+
+.roadmap li[aria-current="step"]::before {
+  margin-right: 6px;
+  color: var(--color-primary);
+  content: "Current:";
+  font-size: 0.8125rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.tableFrame {
+  width: 100%;
+  border-block: 1px solid #dfe4df;
+  background: var(--color-surface);
+}
+
+.evidenceTable,
+.dueTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.evidenceTable th,
+.evidenceTable td,
+.dueTable th,
+.dueTable td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #e8ece9;
+  vertical-align: top;
+}
+
+.evidenceTable tr:last-child > *,
+.dueTable tr:last-child > * {
+  border-bottom: 0;
+}
+
+.evidenceTable thead th,
+.dueTable thead th {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.evidenceTable tbody th,
+.dueTable tbody th {
+  font-weight: 700;
+}
+
+.state {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.state[data-state="practicing"],
+.state[data-state="reliable"] {
+  color: var(--color-primary);
+}
+
+.state[data-state="learning"],
+.state[data-state="review_due"] {
+  color: var(--color-review);
+}
+
+.actionCell {
+  text-align: right;
+}
+
+.actionCell button {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.actionCell button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
+  outline-offset: 3px;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: 24px;
+  }
+
+  .intro {
+    margin-bottom: 32px;
+  }
+
+  .profileSummary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profileSummary span:not(:last-child)::after {
+    display: none;
+  }
+
+  .roadmap {
+    display: grid;
+    gap: 6px;
+  }
+
+  .roadmap li {
+    padding-left: 20px;
+  }
+
+  .roadmap li::after,
+  .roadmap li:not(:last-child)::after {
+    position: absolute;
+    left: 0;
+    content: "↓";
+  }
+
+  .roadmap li:first-child::after {
+    content: "";
+  }
+
+  .evidenceTable thead,
+  .dueTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .evidenceTable,
+  .evidenceTable tbody,
+  .evidenceTable tr,
+  .evidenceTable th,
+  .evidenceTable td,
+  .dueTable,
+  .dueTable tbody,
+  .dueTable tr,
+  .dueTable th,
+  .dueTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .evidenceTable tr,
+  .dueTable tr {
+    padding: 12px 0;
+    border-bottom: 1px solid #dfe4df;
+  }
+
+  .evidenceTable tr:last-child,
+  .dueTable tr:last-child {
+    border-bottom: 0;
+  }
+
+  .evidenceTable th,
+  .evidenceTable td,
+  .dueTable th,
+  .dueTable td {
+    display: grid;
+    grid-template-columns: minmax(76px, 0.45fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 5px 12px;
+    border: 0;
+  }
+
+  .evidenceTable th::before,
+  .evidenceTable td::before,
+  .dueTable th::before,
+  .dueTable td::before {
+    color: var(--color-muted);
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+
+  .actionCell {
+    text-align: left;
+  }
+
+  .actionCell button {
+    width: 100%;
+  }
+}
