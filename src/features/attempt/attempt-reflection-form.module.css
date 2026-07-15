@@ -1,0 +1,165 @@
+.page {
+  width: min(100% - 32px, 720px);
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.panel {
+  padding: 32px;
+  border: 1px solid #dfe4df;
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.intro {
+  margin: 12px 0 0;
+  color: var(--color-muted);
+}
+
+.form {
+  display: grid;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.fieldset,
+.field {
+  display: grid;
+  gap: 10px;
+}
+
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset legend,
+.field label {
+  margin-bottom: 2px;
+  font-weight: 750;
+}
+
+.resultOptions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.resultOption {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #aab3ac;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.resultOption:has(input:checked) {
+  border-color: var(--color-primary);
+  background: #edf7f1;
+}
+
+.resultOption input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.evidenceNote {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #aab3ac;
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.field select {
+  min-height: 48px;
+}
+
+.field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.resultOption:has(input:focus-visible),
+.field select:focus-visible,
+.field textarea:focus-visible,
+.submit:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
+  outline-offset: 2px;
+}
+
+.fieldError,
+.formError {
+  color: var(--color-error);
+}
+
+.formError {
+  margin: 0;
+}
+
+.submit {
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 560px) {
+  .page {
+    width: min(100% - 24px, 720px);
+    padding-top: 24px;
+  }
+
+  .panel {
+    padding: 24px 16px;
+  }
+
+  .resultOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .submit {
+    width: 100%;
+  }
+}

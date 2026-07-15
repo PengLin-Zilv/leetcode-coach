@@ -37,7 +37,7 @@ export function PracticeSession({
   pattern: Pattern;
   problem: Problem;
 }>) {
-  const storageKey = `leetcode-coach:practice:${problem.id}:${active.startedAt}`;
+  const storageKey = `leetcode-coach:practice:${problem.id}`;
   const notesRef = useRef<HTMLTextAreaElement>(null);
   const notesValueRef = useRef("");
   const openMindButtonRef = useRef<HTMLButtonElement>(null);

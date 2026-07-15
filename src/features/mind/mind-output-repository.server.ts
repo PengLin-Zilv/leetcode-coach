@@ -1,5 +1,6 @@
 import "server-only";
 
+import { and, desc, eq } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { getDatabase } from "../../db/client.server";
@@ -8,6 +9,10 @@ import { mindOutputSourceAttempts, mindOutputs } from "../../db/schema";
 import type { MindOutputRepository, PersistedMindOutput } from "./request-mind";
 
 type MindDatabase = LibSQLDatabase<typeof schema>;
+
+export interface MindOutputStore extends MindOutputRepository {
+  getSingleForAttempt(attemptId: string): Promise<PersistedMindOutput | null>;
+}
 
 function requireValidPersistenceShape(output: PersistedMindOutput): void {
   if (output.type === "single") {
@@ -47,7 +52,7 @@ function outputRow(output: PersistedMindOutput) {
 
 export function createMindOutputRepository(
   database: MindDatabase,
-): MindOutputRepository {
+): MindOutputStore {
   return {
     async insert(output) {
       requireValidPersistenceShape(output);
@@ -67,12 +72,49 @@ export function createMindOutputRepository(
         );
       });
     },
+
+    async getSingleForAttempt(attemptId) {
+      const [output] = await database
+        .select({
+          id: mindOutputs.id,
+          type: mindOutputs.type,
+          body: mindOutputs.body,
+          attemptId: mindOutputs.attemptId,
+          patternId: mindOutputs.patternId,
+          generatedAt: mindOutputs.generatedAt,
+        })
+        .from(mindOutputs)
+        .where(
+          and(
+            eq(mindOutputs.type, "single"),
+            eq(mindOutputs.attemptId, attemptId),
+          ),
+        )
+        .orderBy(desc(mindOutputs.generatedAt), desc(mindOutputs.id))
+        .limit(1);
+
+      if (
+        output === undefined ||
+        output.type !== "single" ||
+        output.attemptId === null
+      ) {
+        return null;
+      }
+
+      return {
+        ...output,
+        type: "single",
+        attemptId: output.attemptId,
+        patternId: null,
+        sourceAttemptIds: [],
+      };
+    },
   };
 }
 
-let repository: MindOutputRepository | undefined;
+let repository: MindOutputStore | undefined;
 
-export function getMindOutputRepository(): MindOutputRepository {
+export function getMindOutputRepository(): MindOutputStore {
   repository ??= createMindOutputRepository(getDatabase());
   return repository;
 }

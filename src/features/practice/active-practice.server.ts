@@ -111,3 +111,8 @@ export async function writeActivePractice(
     },
   );
 }
+
+export async function clearActivePractice(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(ACTIVE_PRACTICE_COOKIE_NAME);
+}

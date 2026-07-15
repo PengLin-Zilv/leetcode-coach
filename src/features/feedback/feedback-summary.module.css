@@ -1,0 +1,133 @@
+.page {
+  width: min(100% - 32px, 720px);
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.panel {
+  padding: 32px;
+  border: 1px solid #dfe4df;
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel > h1 {
+  margin: 0 0 32px;
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.section,
+.memorySection {
+  padding: 20px 0;
+  border-top: 1px solid #dfe4df;
+}
+
+.section h2,
+.memorySection h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.section p,
+.memorySection p {
+  margin: 0;
+}
+
+.section p + p,
+.memorySection p + p {
+  margin-top: 8px;
+}
+
+.unavailable {
+  color: var(--color-muted);
+}
+
+.transition {
+  font-weight: 750;
+}
+
+.pendingCopy {
+  margin-top: 10px !important;
+  color: var(--color-review);
+}
+
+.retry {
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding-top: 28px;
+  border-top: 1px solid #dfe4df;
+}
+
+.finish,
+.progress {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.finish {
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.progress {
+  color: var(--color-primary);
+}
+
+.finish:focus-visible,
+.progress:focus-visible,
+.retry:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .page {
+    width: min(100% - 24px, 720px);
+    padding-top: 24px;
+  }
+
+  .panel {
+    padding: 24px 16px;
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .finish,
+  .progress {
+    width: 100%;
+  }
+}

@@ -76,6 +76,38 @@ async function insertAttempts(database: TestDatabase): Promise<{
 }
 
 describe("createMindOutputRepository", () => {
+  it("loads the latest persisted single output for one Attempt", async () => {
+    await withSeededDatabase(async (database) => {
+      const { attemptOne } = await insertAttempts(database);
+      const repository = createMindOutputRepository(database);
+      const older = {
+        id: createId(),
+        type: "single" as const,
+        body: "Older advice.",
+        attemptId: attemptOne.id,
+        patternId: null,
+        sourceAttemptIds: [] as const,
+        generatedAt: new Date("2026-07-14T15:00:01.000Z"),
+      };
+      const latest = {
+        ...older,
+        id: createId(),
+        body: "Name the invariant before coding.",
+        generatedAt: new Date("2026-07-14T15:00:02.000Z"),
+      };
+
+      await repository.insert(older);
+      await repository.insert(latest);
+
+      await expect(
+        repository.getSingleForAttempt(attemptOne.id),
+      ).resolves.toEqual(latest);
+      await expect(
+        repository.getSingleForAttempt(createId()),
+      ).resolves.toBeNull();
+    });
+  });
+
   it("inserts a single output only when its Attempt exists", async () => {
     await withSeededDatabase(async (database) => {
       const { attemptOne } = await insertAttempts(database);
