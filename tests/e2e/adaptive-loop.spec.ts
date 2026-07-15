@@ -80,6 +80,7 @@ test("a persisted reflection updates MEMORY and changes the next Today task", as
   await page.getByRole("button", { name: "Review this attempt" }).click();
 
   await expect(page).toHaveURL(/\/feedback\/[0-9a-f-]+\?cleanup=/);
+  const firstFeedbackUrl = page.url();
   await expect(page.getByText("Memory updated")).toBeVisible();
   const transition = page.getByText(/Unseen → Practicing/);
   const reviewCue = page.getByText(/Review .* in 3 days/);
@@ -167,6 +168,17 @@ test("a persisted reflection updates MEMORY and changes the next Today task", as
       `Continue Arrays & Hashing with ${nextProblem} while it is practicing; it fits your 30-minute session.`,
     ),
   ).toBeVisible();
+
+  await page.getByRole("button", { name: "Start session" }).click();
+  await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+  await page.getByRole("link", { name: "End attempt" }).first().click();
+  await page.getByLabel("Solved", { exact: true }).check();
+  await page.getByRole("button", { name: "Review this attempt" }).click();
+  await expect(page.getByText(/Practicing → Reliable/)).toBeVisible();
+
+  await page.goto(firstFeedbackUrl);
+  await expect(page.getByText(persistedTransition ?? "")).toBeVisible();
+  await expect(page.getByText(persistedReviewCue ?? "")).toBeVisible();
 });
 
 test("Progress exposes the exact due-review Problem that Practice authorizes", async ({

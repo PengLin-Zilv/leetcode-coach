@@ -96,6 +96,23 @@ function addSecondMappedPattern(repository: FakeFeedbackRepository): void {
   });
 }
 
+function addMappedAttempt(
+  repository: FakeFeedbackRepository,
+  addedAttempt: Attempt,
+): void {
+  repository.attempts.push(addedAttempt);
+  repository.problems.push({
+    ...repository.problems[0]!,
+    id: addedAttempt.problemId,
+    title: `Problem ${addedAttempt.problemId}`,
+    url: `https://leetcode.com/problems/${addedAttempt.problemId}/`,
+  });
+  repository.problemPatterns.push({
+    problemId: addedAttempt.problemId,
+    patternId,
+  });
+}
+
 describe("getFeedback", () => {
   it("derives an exact reload-safe MEMORY transition and review cue from Attempts", async () => {
     const repository = new FakeFeedbackRepository();
@@ -119,6 +136,66 @@ describe("getFeedback", () => {
         ],
       },
     });
+  });
+
+  it("keeps a historical MEMORY delta unchanged after a later Attempt is appended", async () => {
+    const repository = new FakeFeedbackRepository();
+    addMappedAttempt(repository, {
+      ...attempt,
+      id: "0190f6f5-9b5a-7a22-8c44-123456789ac2",
+      problemId: "0190f6f5-9b5a-7a22-8c44-123456789ac3",
+      occurredAt: new Date("2026-07-15T15:00:00.000Z"),
+      createdAt: new Date("2026-07-15T15:00:01.000Z"),
+    });
+
+    await expect(getFeedback({ repository }, attemptId)).resolves.toMatchObject(
+      {
+        memory: {
+          changes: [
+            {
+              before: "unseen",
+              after: "practicing",
+              nextReviewDate: "2026-07-17",
+              reviewCue: "Review Arrays & Hashing in 3 days.",
+            },
+          ],
+        },
+      },
+    );
+  });
+
+  it("uses the UUIDv7 text ID to break equal-createdAt append ties", async () => {
+    const repository = new FakeFeedbackRepository();
+    const sharedCreatedAt = attempt.createdAt;
+    addMappedAttempt(repository, {
+      ...attempt,
+      id: "0190f6f5-9b5a-7a22-8c44-123456789aba",
+      problemId: "0190f6f5-9b5a-7a22-8c44-123456789ac4",
+      occurredAt: new Date("2026-07-10T15:00:00.000Z"),
+      createdAt: sharedCreatedAt,
+    });
+    addMappedAttempt(repository, {
+      ...attempt,
+      id: "0190f6f5-9b5a-7a22-8c44-123456789acb",
+      problemId: "0190f6f5-9b5a-7a22-8c44-123456789ac5",
+      occurredAt: new Date("2026-07-15T15:00:00.000Z"),
+      createdAt: sharedCreatedAt,
+    });
+
+    await expect(getFeedback({ repository }, attemptId)).resolves.toMatchObject(
+      {
+        memory: {
+          changes: [
+            {
+              before: "practicing",
+              after: "reliable",
+              nextReviewDate: "2026-07-21",
+              reviewCue: "Review Arrays & Hashing in 7 days.",
+            },
+          ],
+        },
+      },
+    );
   });
 
   it("marks MEMORY pending when a mapped row is missing or older than the Attempt commit", async () => {

@@ -154,7 +154,10 @@ export function AttemptReflectionForm({
             </p>
           ) : null}
 
-          <SubmitButton className={styles.submit}>
+          <SubmitButton
+            className={styles.submit}
+            pendingLabel="Saving your attempt…"
+          >
             Review this attempt
           </SubmitButton>
         </form>

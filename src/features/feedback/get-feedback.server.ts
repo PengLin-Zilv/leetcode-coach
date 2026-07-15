@@ -77,10 +77,8 @@ function patternEvidence(
   patternId: string,
   attempts: readonly Attempt[],
   patternIdsByProblem: ReadonlyMap<string, readonly string[]>,
-  excludedAttemptId?: string,
 ) {
   return attempts.flatMap((attempt) =>
-    attempt.id !== excludedAttemptId &&
     (patternIdsByProblem.get(attempt.problemId) ?? []).includes(patternId)
       ? [
           {
@@ -94,6 +92,21 @@ function patternEvidence(
         ]
       : [],
   );
+}
+
+function compareAttemptAppendOrder(left: Attempt, right: Attempt): number {
+  const createdAtDifference =
+    left.createdAt.getTime() - right.createdAt.getTime();
+
+  if (createdAtDifference !== 0) {
+    return createdAtDifference;
+  }
+
+  if (left.id < right.id) {
+    return -1;
+  }
+
+  return left.id > right.id ? 1 : 0;
 }
 
 function reviewCue(
@@ -218,6 +231,12 @@ export async function getFeedback(
   const mappedPatternIds = [
     ...new Set(patternIdsByProblem.get(attempt.problemId) ?? []),
   ];
+  const attemptsBefore = attempts.filter(
+    (candidate) => compareAttemptAppendOrder(candidate, attempt) < 0,
+  );
+  const attemptsThrough = attempts.filter(
+    (candidate) => compareAttemptAppendOrder(candidate, attempt) <= 0,
+  );
   const changes = mappedPatternIds.flatMap((patternId) => {
     const pattern = patternById.get(patternId);
     if (pattern === undefined) {
@@ -226,17 +245,16 @@ export async function getFeedback(
 
     const before = projectSkillState({
       patternId,
-      attempts: patternEvidence(
-        patternId,
-        attempts,
-        patternIdsByProblem,
-        attempt.id,
-      ),
+      attempts: patternEvidence(patternId, attemptsBefore, patternIdsByProblem),
       now: attempt.createdAt,
     });
     const after = projectSkillState({
       patternId,
-      attempts: patternEvidence(patternId, attempts, patternIdsByProblem),
+      attempts: patternEvidence(
+        patternId,
+        attemptsThrough,
+        patternIdsByProblem,
+      ),
       now: attempt.createdAt,
     });
 

@@ -205,7 +205,11 @@ export function SetupForm({
             </p>
           ) : null}
 
-          <SubmitButton className={styles.submit} disabled={!isComplete}>
+          <SubmitButton
+            className={styles.submit}
+            disabled={!isComplete}
+            pendingLabel="Building your session…"
+          >
             Build my first session
           </SubmitButton>
         </form>
