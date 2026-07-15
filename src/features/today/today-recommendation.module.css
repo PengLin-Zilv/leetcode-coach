@@ -1,0 +1,135 @@
+.page {
+  min-height: 560px;
+  padding: 40px 0 64px;
+}
+
+.context {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.task {
+  padding: 40px;
+  border: 1px solid #dfe4df;
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.eyebrow,
+.pattern {
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  margin: 0 0 28px;
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+}
+
+.pattern {
+  margin: 0 0 6px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.titleRow h1,
+.task > h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.difficulty {
+  padding: 4px 10px;
+  border: 1px solid #cbd3cd;
+  border-radius: 8px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.target {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+}
+
+.reason {
+  max-width: 720px;
+  margin: 36px 0 32px;
+}
+
+.reason h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.reason p {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.primaryAction {
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primaryAction:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, white);
+  outline-offset: 3px;
+}
+
+.reviewRow {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 8px;
+  color: var(--color-review);
+}
+
+.reviewRow a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding-top: 24px;
+  }
+
+  .task {
+    padding: 28px 20px;
+  }
+
+  .titleRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+}

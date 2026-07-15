@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "e2e:prepare": "tsx scripts/prepare-e2e.ts",
+    "dev:e2e": "npm run e2e:prepare && next dev --hostname 127.0.0.1 --port 3100",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "tsx scripts/migrate.ts local",
     "db:migrate:production": "tsx scripts/migrate.ts production",
